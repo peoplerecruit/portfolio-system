@@ -759,7 +759,10 @@ async function loginWithEmail(email, pw) {
   try {
     const data = await apiGet({ action: "getUser", email });
     if (!data.ok) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr(data.error); return; }
-    if (data.user.role !== "member") { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr("팀원 전용 페이지입니다."); return; }
+    const userRoles = String(data.user.role).split(",").map(r => r.trim());
+    if (!userRoles.includes("member") && !userRoles.includes("leader") && !userRoles.includes("hr")) {
+      showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr("접근 권한이 없습니다."); return;
+    }
     if (pw !== null) {
       const stored = data.user.password || "0000";
       if (String(pw) !== String(stored)) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr("비밀번호가 올바르지 않습니다."); return; }
