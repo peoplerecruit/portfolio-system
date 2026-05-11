@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포트폴리오 아카이빙</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+:root {
+  --bg: #F4F5F9;
+  --surface: #FFFFFF;
+  --surface2: #F0F1F6;
+  --border: #E4E6EE;
+  --border2: #D0D3E0;
+  --text: #1A1C26;
+  --text2: #565A70;
+  --text3: #9699AE;
+  --accent: #5B6BF5;
+  --accent2: #7C3AED;
+  --accent-grad: linear-gradient(135deg, #5B6BF5 0%, #7C3AED 100%);
+  --accent-light: #EEF0FE;
+  --accent-light2: #F3F0FF;
+  --green: #12A76A;
+  --green-light: #E6F7F0;
+  --amber: #E07B00;
+  --amber-light: #FEF3E2;
+  --red: #E03B3B;
+  --red-light: #FEF0EE;
+  --purple: #7C3AED;
+  --purple-light: #F3F0FF;
+  --sidebar-w: 220px;
+  --r: 14px; --r-sm: 8px; --r-xs: 5px;
+  --shadow: 0 1px 4px rgba(91,107,245,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 20px rgba(91,107,245,0.10), 0 1px 4px rgba(0,0,0,0.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+/* ── 로그인 ── */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(145deg, #F0F1FB 0%, #EDE8FB 100%); }
+.login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 44px 40px; width: 400px; box-shadow: var(--shadow-md); }
+.login-brand { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; }
+.login-title { font-size: 26px; font-weight: 700; letter-spacing: -.6px; margin-bottom: 6px; color: var(--text); }
+.login-sub { font-size: 13px; color: var(--text3); margin-bottom: 28px; line-height: 1.6; }
+.f-label { font-size: 11px; font-weight: 600; color: var(--text2); letter-spacing: .04em; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+.f-input { width: 100%; border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 10px 13px; font-size: 14px; font-family: 'Pretendard', sans-serif; background: var(--surface); color: var(--text); outline: none; transition: border-color .15s, box-shadow .15s; margin-bottom: 12px; }
+.f-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,107,245,.1); }
+.f-input::placeholder { color: var(--text3); }
+.f-input.err { border-color: var(--red); }
+.login-btn { width: 100%; background: var(--accent-grad); color: #fff; border: none; border-radius: var(--r-sm); padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: opacity .15s, transform .1s; letter-spacing: -.1px; }
+.login-btn:hover { opacity: .9; transform: translateY(-1px); }
+.login-btn:active { transform: translateY(0); }
+.login-err { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
+.pw-link { font-size: 12px; color: var(--text3); text-align: center; margin-top: 14px; cursor: pointer; }
+.pw-link:hover { color: var(--accent); }
+
+/* ── 앱 레이아웃 — 사이드바 + 메인 ── */
+.app-layout { display: flex; min-height: 100vh; }
+
+/* ── 사이드바 ── */
+.sidebar { width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+.sidebar-top { padding: 22px 18px 16px; border-bottom: 1px solid var(--border); }
+.sidebar-brand { font-size: 13px; font-weight: 700; letter-spacing: -.3px; color: var(--text); }
+.sidebar-period { font-size: 10px; font-weight: 500; font-family: 'Pretendard', monospace; color: var(--text3); background: var(--surface2); padding: 2px 7px; border-radius: 20px; margin-top: 5px; display: inline-block; }
+.sidebar-nav { flex: 1; padding: 14px 10px; overflow-y: auto; }
+.nav-section-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; padding: 0 8px; margin-bottom: 5px; margin-top: 12px; }
+.nav-section-title:first-child { margin-top: 0; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 400; transition: all .15s; border: none; background: none; width: 100%; text-align: left; font-family: 'Pretendard', sans-serif; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+.nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-ct { margin-left: auto; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+.sidebar-bottom { padding: 14px 18px; border-top: 1px solid var(--border); }
+.user-block { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.user-av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-grad); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.user-info { min-width: 0; }
+.user-nm { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: var(--text3); }
+.sidebar-btns { display: flex; gap: 5px; }
+.btn-sidebar { flex: 1; font-size: 11px; color: var(--text3); background: var(--surface2); border: none; border-radius: var(--r-xs); padding: 6px; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: all .15s; }
+.btn-sidebar:hover { background: var(--border); color: var(--text); }
+
+/* ── 메인 ── */
+.main-area { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; }
+.main-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 20px 32px 0; }
+.main-header-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.main-page-title { font-size: 20px; font-weight: 700; letter-spacing: -.5px; }
+.main-page-sub { font-size: 13px; color: var(--text3); margin-top: 3px; }
+
+/* ── 내용 ── */
+.content { padding: 28px 32px; max-width: 860px; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── 공지 배너 ── */
+.notice-banner { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 20px; margin-bottom: 20px; }
+.notice-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+.notice-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 5px; }
+.notice-item:last-child { margin-bottom: 0; }
+.notice-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 9px; }
+
+/* ── 제출 상태바 ── */
+.submit-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 16px; margin-bottom: 18px; }
+.submit-bar-l { display: flex; align-items: center; gap: 8px; }
+.s-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.submit-bar-text { font-size: 13px; color: var(--text2); }
+.submit-bar-r { display: flex; gap: 7px; }
+
+/* ── 섹션 헤더 ── */
+.sec-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sec-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); }
+
+/* ── 담당 프로젝트 ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 13px; font-weight: 600; }
+.card-body { padding: 14px 18px; }
+.project-item { display: flex; align-items: center; gap: 10px; padding: 9px 18px; border-bottom: 1px solid var(--border); }
+.project-item:last-child { border-bottom: none; }
+.project-idx { font-size: 11px; font-weight: 600; color: var(--text3); width: 18px; flex-shrink: 0; }
+.proj-name { flex: 1; border: none; background: transparent; font-size: 13px; font-family: 'Pretendard', sans-serif; color: var(--text); outline: none; }
+.proj-name::placeholder { color: var(--text3); }
+.proj-count { width: 140px; border: 1px solid transparent; background: transparent; font-size: 12px; font-family: 'Pretendard', sans-serif; color: var(--text3); outline: none; text-align: right; border-radius: var(--r-xs); padding: 3px 6px; transition: all .15s; }
+.proj-count:focus { border-color: var(--border2); background: var(--surface2); }
+.proj-count::placeholder { color: var(--border2); }
+.proj-del { background: none; border: none; color: var(--text3); cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: 13px; transition: all .15s; }
+.proj-del:hover { background: var(--red-light); color: var(--red); }
+.proj-add-btn { display: flex; align-items: center; gap: 6px; padding: 10px 18px; font-size: 12px; color: var(--text3); cursor: pointer; background: none; border: none; font-family: 'Pretendard', sans-serif; width: 100%; transition: all .15s; }
+.proj-add-btn:hover { background: var(--surface2); color: var(--accent); }
+
+/* ── 작업물 카드 ── */
+.pf-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 8px; box-shadow: var(--shadow); transition: box-shadow .15s; }
+.pf-card:hover { box-shadow: var(--shadow-md); }
+.pf-card-hd { display: flex; align-items: center; gap: 10px; padding: 13px 16px; cursor: pointer; }
+.status-pill { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
+.pf-card-info { flex: 1; min-width: 0; }
+.pf-card-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-card-meta { font-size: 11px; color: var(--text3); margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.contrib-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.pf-card-acts { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.pf-card-body { border-top: 1px solid var(--border); display: none; background: var(--bg); }
+.pf-card-body.open { display: block; }
+.pf-body-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+.pf-field { display: flex; flex-direction: column; gap: 3px; }
+.pf-fl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); }
+.pf-fv { font-size: 13px; color: var(--text); }
+.pf-txt { margin: 0 16px 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); font-size: 13px; color: var(--text2); line-height: 1.7; white-space: pre-wrap; }
+.pf-tip-wrap { margin: 0 16px 16px; }
+.pf-tip-hd { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); margin-bottom: 8px; }
+.pf-tip-item { margin-bottom: 8px; }
+.pf-tip-lbl { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+.pf-tip-txt { font-size: 13px; color: var(--text2); line-height: 1.6; padding: 9px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); }
+/* 첨부 미리보기 */
+.assets-wrap { padding: 0 16px 16px; }
+.assets-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 10px; }
+.assets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.asset-item { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; cursor: pointer; transition: box-shadow .15s; }
+.asset-item:hover { box-shadow: var(--shadow-md); }
+.asset-thumb-wrap { width: 100%; aspect-ratio: 1/1; background: var(--surface2); overflow: hidden; }
+.asset-thumb { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s; }
+.asset-thumb:hover { transform: scale(1.04); }
+.asset-thumb-ph { width: 100%; height: 100%; background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-light2) 100%); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.asset-info { padding: 7px 10px 9px; }
+.asset-type-lbl { font-size: 10px; color: var(--text3); font-weight: 500; margin-bottom: 2px; }
+.asset-url-txt { font-size: 11px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.asset-url-txt:hover { text-decoration: underline; }
+.add-asset-btn { display: flex; align-items: center; gap: 6px; width: 100%; padding: 8px 12px; border: 1.5px dashed var(--border2); border-radius: var(--r-sm); background: none; font-size: 12px; color: var(--text3); cursor: pointer; font-family: 'Pretendard', sans-serif; transition: all .15s; }
+.add-asset-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* ── 폼 ── */
+.form-card { background: var(--surface); border: 1.5px solid var(--accent); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow-md); }
+.form-hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--accent-grad); }
+.form-hd-title { font-size: 13px; font-weight: 700; color: #fff; }
+.form-body { padding: 20px; }
+.form-row { margin-bottom: 13px; }
+.req-dot { color: var(--red); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 11px; }
+.form-div { height: 1px; background: var(--border); margin: 16px 0; }
+.form-sec-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+select.f-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239699AE'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; cursor: pointer; }
+textarea.f-input { resize: vertical; min-height: 68px; line-height: 1.6; }
+.range-row { display: flex; align-items: center; gap: 10px; }
+input[type=range] { flex: 1; height: 3px; accent-color: var(--accent); cursor: pointer; }
+.range-val { font-size: 13px; font-weight: 700; min-width: 38px; text-align: right; color: var(--accent); }
+/* AI 토글 */
+.ai-opts { display: flex; gap: 6px; }
+.ai-opt { padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all .15s; background: var(--surface); font-family: 'Pretendard', sans-serif; }
+.ai-opt:hover { border-color: var(--accent); }
+.ai-opt.on { background: var(--accent-grad); color: #fff; border-color: transparent; }
+/* 첨부 폼 */
+.asset-form-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 11px; margin-bottom: 7px; }
+.attach-type-row { display: flex; gap: 5px; margin-bottom: 8px; }
+.att-type-btn { padding: 4px 11px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text2); transition: all .15s; font-family: 'Pretendard', sans-serif; }
+.att-type-btn.on { background: var(--accent-grad); color: #fff; border-color: transparent; }
+.asset-form-row { display: flex; gap: 7px; align-items: center; }
+
+/* ── 버튼 ── */
+.btn { border-radius: var(--r-sm); padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: all .15s; border: none; }
+.btn-accent { background: var(--accent-grad); color: #fff; }
+.btn-accent:hover { opacity: .9; transform: translateY(-1px); }
+.btn-outline { background: none; border: 1.5px solid var(--border); color: var(--text2); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: none; border: 1px solid #f0c0bd; color: var(--red); padding: 5px 10px; font-size: 11px; }
+.btn-danger:hover { background: var(--red-light); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+/* ── 툴 스킬 ── */
+.skill-guide { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; }
+.skill-guide-hd { padding: 13px 18px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.skill-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.skill-table th { background: var(--surface2); padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text2); border-bottom: 1px solid var(--border); }
+.skill-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; color: var(--text2); }
+.skill-table tr:last-child td { border-bottom: none; }
+.skill-table td:first-child { font-weight: 600; color: var(--text); white-space: nowrap; }
+/* 반기 탭 */
+.period-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.period-tab { padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; background: var(--surface); transition: all .15s; font-family: 'Pretendard', sans-serif; }
+.period-tab:hover { border-color: var(--accent); color: var(--accent); }
+.period-tab.active { background: var(--accent-grad); color: #fff; border-color: transparent; }
+.add-period-btn { padding: 6px 12px; border: 1.5px dashed var(--border2); border-radius: 20px; font-size: 12px; color: var(--text3); cursor: pointer; background: none; transition: all .15s; font-family: 'Pretendard', sans-serif; }
+.add-period-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* 스킬 아이템 */
+.skill-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.skill-item:last-child { border-bottom: none; }
+.skill-name { font-size: 13px; font-weight: 600; }
+.skill-type { font-size: 11px; color: var(--text3); font-weight: 400; }
+.skill-desc { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.lv { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.lv5 { background: var(--accent-grad); color: #fff; }
+.lv4 { background: var(--purple-light); color: var(--purple); }
+.lv3 { background: var(--green-light); color: var(--green); }
+.lv2 { background: var(--amber-light); color: var(--amber); }
+.lv1 { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+
+/* ── 프로필 ── */
+.profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.readonly-field { padding: 9px 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); font-size: 13px; color: var(--text2); }
+
+/* ── 모달 ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(26,28,38,.4); z-index: 500; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+.modal-bg.show { display: flex; }
+.modal-box { background: var(--surface); border-radius: 18px; padding: 32px; width: 380px; box-shadow: var(--shadow-md); }
+.modal-title { font-size: 18px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 6px; }
+.modal-sub { font-size: 12px; color: var(--text3); margin-bottom: 22px; line-height: 1.6; }
+
+/* ── 로딩 ── */
+.loading-overlay { position: fixed; inset: 0; background: rgba(244,245,249,.9); display: flex; align-items: center; justify-content: center; z-index: 999; font-size: 13px; color: var(--text3); gap: 10px; backdrop-filter: blur(4px); }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 알림 ── */
+.notif { position: fixed; bottom: 24px; left: calc(var(--sidebar-w) + 50%); transform: translateX(-50%) translateY(8px); background: var(--text); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: all .2s; pointer-events: none; z-index: 1000; white-space: nowrap; }
+.notif.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── 작성 유의사항 박스 ── */
+.caution-box { background: linear-gradient(135deg, #EEF0FE 0%, #F3F0FF 100%); border: 1.5px solid #C7CDFB; border-radius: var(--r); overflow: hidden; margin-bottom: 16px; }
+.caution-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; cursor: pointer; user-select: none; transition: background .15s; }
+.caution-header:hover { background: rgba(91,107,245,.06); }
+.caution-header-left { display: flex; align-items: center; gap: 8px; }
+.caution-icon { font-size: 15px; }
+.caution-title { font-size: 13px; font-weight: 700; color: var(--accent); }
+.caution-chevron { font-size: 13px; color: var(--accent); transition: transform .25s; }
+.caution-chevron.open { transform: rotate(180deg); }
+.caution-body { padding: 0 18px 16px; display: none; }
+.caution-body.open { display: block; }
+.caution-section { margin-bottom: 14px; }
+.caution-items { display: flex; flex-direction: column; gap: 6px; }
+.caution-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text2); line-height: 1.6; }
+.caution-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 8px; }
+.caution-tip { background: rgba(255,255,255,.7); border: 1px solid #D4D8FA; border-radius: var(--r-sm); padding: 13px 15px; }
+.caution-tip-title { font-size: 13px; font-weight: 700; color: var(--amber); margin-bottom: 6px; }
+.caution-tip-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+.empty-icon { font-size: 28px; margin-bottom: 8px; }
+.badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.badge-accent { background: var(--accent-light); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay"><div class="spinner"></div>불러오는 중...</div>
+
+<!-- 로그인 -->
+<div class="login-wrap" id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-brand">포트폴리오 아카이빙</div>
+    <div class="login-title">로그인</div>
+    <div class="login-sub">회사 이메일과 비밀번호를 입력하세요.<br>최초 비밀번호는 <b>0000</b>이에요.</div>
+    <label class="f-label">이메일</label>
+    <input class="f-input" type="text" id="email-input" placeholder="이메일 주소">
+    <label class="f-label">비밀번호</label>
+    <input class="f-input" type="password" id="pw-input" placeholder="비밀번호" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">로그인</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="pw-link" onclick="showPwModal(true)">비밀번호 변경하기</div>
+  </div>
+</div>
+
+<!-- 앱 -->
+<div id="app" style="display:none">
+  <div class="app-layout">
+
+    <!-- 사이드바 -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">포트폴리오 아카이빙</div>
+        <div class="sidebar-period" id="sidebar-period">2026H1</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">메뉴</div>
+        <button class="nav-item active" onclick="switchTab('portfolio',this)">
+          <span class="nav-icon">📁</span> 포트폴리오
+          <span class="nav-ct" id="pf-ct">0</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('skill',this)">
+          <span class="nav-icon">🛠</span> 툴 스킬
+        </button>
+        <button class="nav-item" onclick="switchTab('profile',this)">
+          <span class="nav-icon">👤</span> 내 정보
+        </button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="user-block">
+          <div class="user-av" id="user-av">김</div>
+          <div class="user-info">
+            <div class="user-nm" id="user-nm">김예인</div>
+            <div class="user-role" id="user-rank">—</div>
+          </div>
+        </div>
+        <div class="sidebar-btns">
+          <button class="btn-sidebar" onclick="showPwModal(false)">비밀번호 변경</button>
+          <button class="btn-sidebar" onclick="logout()">로그아웃</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 메인 -->
+    <div class="main-area">
+      <div class="content">
+
+        <!-- ① 포트폴리오 -->
+        <div class="section active" id="section-portfolio">
+          <div class="notice-banner">
+            <div class="notice-title">📌 포트폴리오 아카이빙 안내</div>
+            <div class="notice-item"><div class="notice-dot"></div><span>포트폴리오는 단순한 작업물 정리가 아니라, 본인이 실제로 어떤 작업을 했고 어떤 강점을 발휘했는지를 기록하기 위한 개인 아카이브입니다.</span></div>
+            <div class="notice-item"><div class="notice-dot"></div><span>해당 자료는 추후 연봉 협상, 승진, 피드백 과정에서 개인의 성과를 기록 기반으로 판단하기 위해 활용됩니다.</span></div>
+            <div class="notice-item"><div class="notice-dot"></div><span>작업 완료 후 수시로 기록하고, 반기 마감 전 제출 버튼을 눌러주세요. 제출 후에는 수정이 불가합니다.</span></div>
+          </div>
+
+          <!-- 작성 유의사항 -->
+          <div class="caution-box" id="caution-box">
+            <div class="caution-header" onclick="toggleCaution()">
+              <div class="caution-header-left">
+                <span class="caution-icon">✅</span>
+                <span class="caution-title">작성 유의 사항</span>
+              </div>
+              <span class="caution-chevron" id="caution-chevron">▾</span>
+            </div>
+            <div class="caution-body" id="caution-body">
+              <div class="caution-section">
+                <div class="caution-items">
+                  <div class="caution-item"><div class="caution-dot"></div><span>상반기 작업한 내용 중, 가장 우수하다고 생각하는 작업물을 선정하여, 자유롭게 업로드해주세요.</span></div>
+                  <div class="caution-item"><div class="caution-dot"></div><span>프로젝트 별로 페이지를 생성하여 포트폴리오를 정리해주세요.</span></div>
+                  <div class="caution-item"><div class="caution-dot"></div><span>본인이 기여한 부분 및 각각의 기여도(%)를 작성해주세요.</span></div>
+                  <div class="caution-item"><div class="caution-dot"></div><span>협업을 통해 작업한 경우, 협업자도 함께 작성해주세요.</span></div>
+                  <div class="caution-item"><div class="caution-dot"></div><span>작업 시 사용했던 툴도 함께 작성해주세요. (디자인툴 / AI)</span></div>
+                  <div class="caution-item"><div class="caution-dot"></div><span>AI를 일부/전체 활용했다면 사용한 AI TOOL 및 AI 활용 내용도 함께 작성해주세요.</span></div>
+                </div>
+              </div>
+              <div class="caution-tip">
+                <div class="caution-tip-title">🌟 포트폴리오 작성 TIP</div>
+                <div class="caution-tip-desc">포트폴리오에는 단순 결과물 뿐 아니라, 제작 과정에서의 생각과 발전 과정이 담기면 좋습니다. 작성 시 아래 내용을 간단히 포함해주시면 됩니다.</div>
+                <div class="caution-items" style="margin-top:8px">
+                  <div class="caution-item"><div class="caution-dot" style="background:var(--amber)"></div><span>제작 당시 고려한 포인트가 있다면?</span></div>
+                  <div class="caution-item"><div class="caution-dot" style="background:var(--amber)"></div><span>기획 → 제작 단계로 진행하며, 본인의 판단이나 제안으로 변경/발전한 포인트가 있다면?</span></div>
+                  <div class="caution-item"><div class="caution-dot" style="background:var(--amber)"></div><span>본인이 판단하는 작업물의 완성도와 개선할 포인트가 있다면?</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="submit-bar" id="submit-bar">
+            <div class="submit-bar-l">
+              <div class="s-dot" style="background:var(--text3)" id="s-dot"></div>
+              <span class="submit-bar-text" id="s-text">불러오는 중...</span>
+            </div>
+            <div class="submit-bar-r">
+              <!-- 반기 탭 -->
+              <div id="pf-period-tabs" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+              <button class="add-period-btn" style="padding:5px 11px;font-size:12px" onclick="addPfPeriod()">＋</button>
+              <button class="btn btn-outline btn-sm" onclick="openSubmitConfirm()">반기 제출</button>
+              <button class="btn btn-accent btn-sm" onclick="openAddForm()">+ 작업물 추가</button>
+            </div>
+          </div>
+
+          <!-- 담당 프로젝트 -->
+          <div class="card">
+            <div class="card-hd">
+              <span class="card-title">담당 프로젝트</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:11px;color:var(--text3)">프로젝트명 · 월 제작건수</span>
+                <button class="btn btn-accent btn-sm" onclick="saveProjects()">저장</button>
+              </div>
+            </div>
+            <div id="project-rows"></div>
+            <button class="proj-add-btn" onclick="addProjectRow()">＋ 프로젝트 추가</button>
+          </div>
+
+          <!-- 작업물 목록 -->
+          <div class="sec-hd">
+            <span class="sec-title">작업물 목록</span>
+          </div>
+          <div id="pf-list"></div>
+
+          <!-- 추가/수정 폼 -->
+          <div class="form-card" id="pf-form" style="display:none">
+            <div class="form-hd">
+              <span class="form-hd-title" id="form-title-label">작업물 추가</span>
+              <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" onclick="closeForm()">닫기 ✕</button>
+            </div>
+            <div class="form-body">
+              <input type="hidden" id="form-id">
+              <div class="form-sec-lbl">기본 정보</div>
+              <div class="two-col">
+                <div class="form-row">
+                  <div class="f-label"><span class="req-dot">●</span> 클라이언트</div>
+                  <input class="f-input" type="text" id="f-client" placeholder="예) 스타필드">
+                </div>
+                <div class="form-row">
+                  <div class="f-label"><span class="req-dot">●</span> 납품 채널</div>
+                  <select class="f-input" id="f-channel">
+                    <option value="">선택</option>
+                    <option>Instagram</option><option>YouTube</option>
+                    <option>Facebook</option><option>기타</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="f-label"><span class="req-dot">●</span> 작업 제목</div>
+                <input class="f-input" type="text" id="f-title" placeholder="예) 중식마녀 팝업 사전고지 콘텐츠">
+              </div>
+              <div class="three-col">
+                <div class="form-row">
+                  <div class="f-label"><span class="req-dot">●</span> 상태</div>
+                  <select class="f-input" id="f-status">
+                    <option value="">선택</option>
+                    <option>진행중</option><option>완료</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <div class="f-label"><span class="req-dot">●</span> 시작일</div>
+                  <input class="f-input" type="date" id="f-date-start">
+                </div>
+                <div class="form-row">
+                  <div class="f-label"><span class="req-dot">●</span> 완료일</div>
+                  <input class="f-input" type="date" id="f-date-end">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="f-label"><span class="req-dot">●</span> 본인 기여율</div>
+                <div class="range-row">
+                  <input type="range" id="f-contrib" min="0" max="100" step="10" value="100" oninput="document.getElementById('f-contrib-val').textContent=this.value+'%'">
+                  <span class="range-val" id="f-contrib-val">100%</span>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="f-label"><span class="req-dot">●</span> 사용 디자인 툴</div>
+                <input class="f-input" type="text" id="f-tools" placeholder="예) 일러스트레이터, 포토샵">
+              </div>
+              <div class="form-div"></div>
+              <div class="form-sec-lbl">협업 정보 (선택)</div>
+              <div class="two-col">
+                <div class="form-row">
+                  <div class="f-label">협업자</div>
+                  <input class="f-input" type="text" id="f-collab" placeholder="예) 배민경, 박준희">
+                </div>
+                <div class="form-row">
+                  <div class="f-label">협업자 기여율(%)</div>
+                  <input class="f-input" type="number" id="f-collab-pct" min="0" max="100" placeholder="예) 30">
+                </div>
+              </div>
+              <div class="form-div"></div>
+              <div class="form-sec-lbl">AI 활용</div>
+              <div class="form-row">
+                <div class="f-label"><span class="req-dot">●</span> AI 활용 여부</div>
+                <div class="ai-opts">
+                  <div class="ai-opt on" onclick="selectAI(this,'미활용')">미활용</div>
+                  <div class="ai-opt" onclick="selectAI(this,'일부활용')">일부활용</div>
+                  <div class="ai-opt" onclick="selectAI(this,'전체활용')">전체활용</div>
+                </div>
+              </div>
+              <div id="ai-detail-wrap" style="display:none">
+                <div class="two-col">
+                  <div class="form-row">
+                    <div class="f-label">사용 AI 툴</div>
+                    <input class="f-input" type="text" id="f-ai-tools" placeholder="예) Chat GPT, Midjourney">
+                  </div>
+                  <div class="form-row">
+                    <div class="f-label">AI 활용 내용</div>
+                    <input class="f-input" type="text" id="f-ai-detail" placeholder="예) 이미지 업사이클링">
+                  </div>
+                </div>
+              </div>
+              <div class="form-div"></div>
+              <div class="form-sec-lbl">작업물 첨부 (여러 개 추가 가능)</div>
+              <div id="asset-list-form"></div>
+              <button class="add-asset-btn" onclick="addAssetField()">＋ 첨부 추가</button>
+              <div class="form-div"></div>
+              <div class="form-sec-lbl">작성 TIP ✦ (권장)</div>
+              <div class="form-row">
+                <div class="f-label">작업 설명 <span style="font-weight:400;color:var(--text3)">(자유롭게)</span></div>
+                <textarea class="f-input" id="f-desc" placeholder="작업 전반에 대해 자유롭게 설명해주세요..."></textarea>
+              </div>
+              <div class="form-row">
+                <div class="f-label">제작 시 고려한 포인트</div>
+                <textarea class="f-input" id="f-tip1" placeholder="브랜드 톤, 타깃 등 고려한 점..."></textarea>
+              </div>
+              <div class="form-row">
+                <div class="f-label">기획→제작 중 발전한 포인트</div>
+                <textarea class="f-input" id="f-tip2" placeholder="본인이 제안하거나 변경한 부분..."></textarea>
+              </div>
+              <div class="form-row">
+                <div class="f-label">완성도 & 개선 포인트</div>
+                <textarea class="f-input" id="f-tip3" placeholder="완성도와 다음엔 개선하고 싶은 점..."></textarea>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeForm()">취소</button>
+                <button class="btn btn-accent" onclick="saveItem()" id="save-btn">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ② 툴 스킬 -->
+        <div class="section" id="section-skill">
+
+          <!-- 가이드 -->
+          <div class="skill-guide">
+            <div class="skill-guide-hd">📋 활용 능력 지표</div>
+            <div style="padding:12px 18px 6px;font-size:13px;color:var(--text2)">
+              업무 시 주로 사용하는 툴을 선택해주세요. 각 툴의 숙련 수준을 판단해주세요.
+            </div>
+            <div style="overflow-x:auto">
+              <table class="skill-table">
+                <thead>
+                  <tr>
+                    <th style="width:130px"></th>
+                    <th>디자인툴</th>
+                    <th>AI</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>기초 경험 단계</td>
+                    <td>툴을 학습 중이며, 간단한 수정·보정 정도 수행 가능</td>
+                    <td>AI를 레퍼런스·아이디어 참고용으로 제한적으로 활용하며, 단순한 질문을 통한 AI 제작물 생산 가능</td>
+                  </tr>
+                  <tr>
+                    <td>기본 활용 단계</td>
+                    <td>템플릿·가이드 기반의 제작 가능. 추가 학습 시 속도 향상 기대</td>
+                    <td>구성, 아이디어 정리 등 제작 업무의 일부에 AI를 반복적으로 활용하며, AI 결과물을 수정·보완하여 결과물에 반영한다.</td>
+                  </tr>
+                  <tr>
+                    <td>실무 활용 단계</td>
+                    <td>프로젝트 단위로 주도적 작업 가능. 품질/속도 모두 준수</td>
+                    <td>프로젝트, 업무 목적에 맞게 프롬프트를 설계하고 결과물 추출. 품질과 속도를 동시에 고려하며 실무에 안정적으로 적용</td>
+                  </tr>
+                  <tr>
+                    <td>고급 응용 단계</td>
+                    <td>(동일직무 타인원 대비) 다양한 고급 기능을 능숙히 활용, 독창적 결과물 제작 가능</td>
+                    <td>해당 AI 툴 단일 활용이 아니라, 여러 AI 툴과 연계하고 조합하며, 고급 기능을 활용할 수 있음. 팀 내 프롬프트·가이드를 정리 공유할 수 있음.</td>
+                  </tr>
+                  <tr>
+                    <td>전문가 리드 단계</td>
+                    <td>툴 전반을 깊이 이해하고, 동료 교육·워크플로우 개선 가능</td>
+                    <td>새로운 AI 툴을 실험, 도입하고 동료 교육/코칭을 통해 조직 전체의 AI 활용 수준 향상에 도움</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 반기 탭 -->
+          <div class="sec-hd" style="margin-bottom:10px">
+            <span class="sec-title">반기별 툴 스킬 기록</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+            <div id="period-tabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            <button class="add-period-btn" onclick="addPeriod()">＋ 반기 추가</button>
+          </div>
+
+          <div class="sec-hd">
+            <span class="sec-title" id="skill-period-label">툴 목록</span>
+            <button class="btn btn-accent btn-sm" onclick="openSkillForm()">+ 툴 추가</button>
+          </div>
+          <div class="card">
+            <div style="padding:0 18px" id="skill-list"></div>
+          </div>
+          <!-- 툴 추가 폼 -->
+          <div class="form-card" id="skill-form" style="display:none">
+            <div class="form-hd">
+              <span class="form-hd-title">툴 추가</span>
+              <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" onclick="closeSkillForm()">닫기 ✕</button>
+            </div>
+            <div class="form-body">
+              <div class="two-col">
+                <div class="form-row">
+                  <div class="f-label"><span class="req-dot">●</span> 툴 이름</div>
+                  <input class="f-input" type="text" id="sk-name" placeholder="예) Photoshop">
+                </div>
+                <div class="form-row">
+                  <div class="f-label"><span class="req-dot">●</span> 유형</div>
+                  <select class="f-input" id="sk-type">
+                    <option value="">선택</option>
+                    <option>디자인툴</option><option>AI</option><option>기타</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="f-label"><span class="req-dot">●</span> 숙련도</div>
+                <select class="f-input" id="sk-level">
+                  <option value="">선택</option>
+                  <option>기초 경험</option><option>기본 활용</option>
+                  <option>실무 활용</option><option>고급 응용</option><option>전문가 리드</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="f-label">활용 경험</div>
+                <textarea class="f-input" id="sk-exp" placeholder="어떤 업무에 활용했는지 간단히..." style="min-height:56px"></textarea>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-outline" onclick="closeSkillForm()">취소</button>
+                <button class="btn btn-accent" onclick="saveSkill()">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ③ 내 정보 -->
+        <div class="section" id="section-profile">
+          <div class="card">
+            <div class="card-hd">
+              <span class="card-title">기본 정보</span>
+              <span style="font-size:11px;color:var(--text3)">수정은 HR 문의</span>
+            </div>
+            <div class="card-body">
+              <div class="profile-grid" id="profile-grid"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div class="modal-bg" id="pw-modal">
+  <div class="modal-box">
+    <div class="modal-title">비밀번호 변경</div>
+    <div class="modal-sub" id="pw-modal-sub">현재 비밀번호를 입력하고 새 비밀번호를 설정하세요.</div>
+    <div id="pw-current-wrap">
+      <div class="form-row">
+        <div class="f-label">현재 비밀번호</div>
+        <input class="f-input" type="password" id="pw-current" placeholder="현재 비밀번호">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="f-label">새 비밀번호</div>
+      <input class="f-input" type="password" id="pw-new" placeholder="새 비밀번호 (4자 이상)">
+    </div>
+    <div class="form-row">
+      <div class="f-label">새 비밀번호 확인</div>
+      <input class="f-input" type="password" id="pw-confirm" placeholder="새 비밀번호 재입력">
+    </div>
+    <div class="login-err" id="pw-err" style="margin-bottom:10px"></div>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn btn-outline" onclick="closePwModal()">취소</button>
+      <button class="btn btn-accent" onclick="changePw()">변경하기</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbylpaiUCTxCeIsXwDkitfuZYgjWbJofsp6839Vd1ZVKGwetDjx0cF_DyZF-C-MmyveM/exec";
+
+let currentUser = null;
+let portfolioItems = [];
+let skillItems = [];
+let projectRows = [];
+let selectedAI = "미활용";
+let editingId = null;
+let assetFields = [];
+let pwModalFromLogin = false;
+
+// 반기 관리 — 포트폴리오
+let pfPeriods = ["26년도 상반기", "26년도 하반기"];
+let activePfPeriod = "26년도 상반기";
+
+// 반기 관리 — 툴 스킬
+let periods = ["26년도 상반기", "26년도 하반기"];
+let activePeriod = "26년도 상반기";
+
+function renderPfPeriodTabs() {
+  const wrap = document.getElementById("pf-period-tabs");
+  if (!wrap) return;
+  wrap.innerHTML = pfPeriods.map(p => `
+    <button class="period-tab btn-sm ${p===activePfPeriod?'active':''}" style="padding:5px 12px;font-size:12px" onclick="selectPfPeriod('${p}')">${p}</button>`).join('');
+}
+
+async function selectPfPeriod(p) {
+  activePfPeriod = p;
+  renderPfPeriodTabs();
+  await Promise.all([loadPortfolio(), loadProjects()]);
+}
+
+function addPfPeriod() {
+  const name = prompt("반기명을 입력하세요 (예: 27년도 상반기)");
+  if (!name || !name.trim()) return;
+  if (pfPeriods.includes(name.trim())) { showNotif("이미 존재하는 반기예요"); return; }
+  pfPeriods.push(name.trim());
+  selectPfPeriod(name.trim());
+}
+
+
+async function apiGet(params) {
+  const res = await fetch(API + "?" + new URLSearchParams(params));
+  return res.json();
+}
+async function apiPost(body) {
+  const url = API + "?" + new URLSearchParams(body);
+  const res = await fetch(url, { redirect: "follow" });
+  return res.json();
+}
+
+window.onload = () => {
+  const saved = localStorage.getItem("pf_email");
+  if (saved) loginWithEmail(saved, null);
+  else { showLoading(false); document.getElementById("login-screen").style.display = "flex"; }
+};
+
+async function login() {
+  const email = document.getElementById("email-input").value.trim();
+  const pw = document.getElementById("pw-input").value.trim();
+  if (!email || !pw) { showLoginErr("이메일과 비밀번호를 입력해주세요"); return; }
+  await loginWithEmail(email, pw);
+}
+
+async function loginWithEmail(email, pw) {
+  showLoading(true);
+  try {
+    const data = await apiGet({ action: "getUser", email });
+    if (!data.ok) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr(data.error); return; }
+    if (data.user.role !== "member") { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr("팀원 전용 페이지입니다."); return; }
+    if (pw !== null) {
+      const stored = data.user.password || "0000";
+      if (String(pw) !== String(stored)) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr("비밀번호가 올바르지 않습니다."); return; }
+    }
+    currentUser = data.user;
+    localStorage.setItem("pf_email", email);
+    await initApp();
+  } catch(e) {
+    showLoading(false);
+    document.getElementById("login-screen").style.display = "flex";
+    showLoginErr("연결 오류: " + e.message);
+    console.error("Login error:", e);
+  }
+}
+
+async function initApp() {
+  document.getElementById("user-nm").textContent = currentUser.name;
+  document.getElementById("user-av").textContent = currentUser.name[0];
+  document.getElementById("user-rank").textContent = currentUser.rank || currentUser.job || "—";
+  renderProfile();
+  await Promise.all([loadPortfolio(), loadSkills(), loadProjects()]);
+  showLoading(false);
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  renderPeriodTabs();
+  renderPfPeriodTabs();
+}
+
+function logout() { localStorage.removeItem("pf_email"); location.reload(); }
+function showLoginErr(msg) { const el = document.getElementById("login-err"); el.textContent = msg; el.style.display = "block"; }
+
+// ── 비밀번호 ──
+function showPwModal(fromLogin) {
+  pwModalFromLogin = fromLogin;
+  document.getElementById("pw-modal-sub").textContent = fromLogin ? "최초 비밀번호(0000)를 변경해주세요." : "현재 비밀번호를 입력하고 새 비밀번호를 설정하세요.";
+  document.getElementById("pw-current-wrap").style.display = fromLogin ? "none" : "block";
+  ["pw-current","pw-new","pw-confirm"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("pw-err").style.display = "none";
+  document.getElementById("pw-modal").classList.add("show");
+}
+function closePwModal() { document.getElementById("pw-modal").classList.remove("show"); }
+async function changePw() {
+  const cur = document.getElementById("pw-current").value.trim();
+  const nw = document.getElementById("pw-new").value.trim();
+  const cf = document.getElementById("pw-confirm").value.trim();
+  const errEl = document.getElementById("pw-err");
+  if (!pwModalFromLogin && !cur) { errEl.textContent = "현재 비밀번호를 입력해주세요"; errEl.style.display = "block"; return; }
+  if (nw.length < 4) { errEl.textContent = "비밀번호는 4자 이상이어야 해요"; errEl.style.display = "block"; return; }
+  if (nw !== cf) { errEl.textContent = "새 비밀번호가 일치하지 않아요"; errEl.style.display = "block"; return; }
+  if (!pwModalFromLogin && cur !== String(currentUser.password || "0000")) { errEl.textContent = "현재 비밀번호가 올바르지 않아요"; errEl.style.display = "block"; return; }
+  const data = await apiPost({ action: "changePassword", email: currentUser.email, new_password: nw });
+  if (data.ok) { currentUser.password = nw; closePwModal(); showNotif("비밀번호가 변경되었습니다"); }
+  else { errEl.textContent = "변경 실패: " + data.error; errEl.style.display = "block"; }
+}
+
+// ── 담당 프로젝트 ──
+// ── 담당 프로젝트 저장/로드 ───────────────────────────
+async function loadProjects() {
+  const data = await apiGet({ action: "getProjects", email: currentUser.email, period: activePfPeriod });
+  if (data.ok) {
+    projectRows = data.items.length > 0
+      ? data.items.map(p => ({ name: p.name||p.project_name||"", count: p.count||p.monthly_count||"" }))
+      : [];
+    renderProjectRows();
+  }
+}
+
+async function saveProjects() {
+  const data = await apiPost({
+    action: "saveProjects",
+    member_email: currentUser.email,
+    period: activePfPeriod,
+    projects: JSON.stringify(projectRows.filter(p => p.name.trim()))
+  });
+  if (data.ok) showNotif("프로젝트 목록이 저장되었습니다");
+  else showNotif("저장 실패: " + data.error);
+}
+
+function renderProjectRows() {
+  document.getElementById("project-rows").innerHTML = projectRows.map((p, i) => `
+    <div class="project-item">
+      <span class="project-idx">${i + 1}</span>
+      <input class="proj-name" type="text" placeholder="프로젝트명" value="${p.name||''}" oninput="projectRows[${i}].name=this.value">
+      <input class="proj-count" type="text" placeholder="월 제작건수 예) 35~45건" value="${p.count||''}" oninput="projectRows[${i}].count=this.value">
+      <button class="proj-del" onclick="removeProject(${i})">✕</button>
+    </div>`).join('');
+}
+function addProjectRow() { projectRows.push({ name:"", count:"" }); renderProjectRows(); document.querySelectorAll(".proj-name")[projectRows.length-1]?.focus(); }
+function removeProject(i) { projectRows.splice(i,1); renderProjectRows(); }
+
+// ── 포트폴리오 ──
+async function loadPortfolio() {
+  const data = await apiGet({ action:"getPortfolio", email:currentUser.email, period:activePfPeriod });
+  if (data.ok) { portfolioItems = data.items||[]; renderPortfolio(); }
+}
+
+function getContribColor(pct) {
+  const n = parseInt(pct)||0;
+  if (n===100) return { bg:"#E6F7F0", color:"#12A76A" };
+  if (n>=70)   return { bg:"#EEF0FE", color:"#5B6BF5" };
+  if (n>=40)   return { bg:"#FEF3E2", color:"#E07B00" };
+  return               { bg:"#F0F1F6", color:"#565A70" };
+}
+
+function formatDate(d) {
+  if (!d) return "—";
+  const s = String(d);
+  if (s.includes("T")||s.includes("GMT")) {
+    const dt = new Date(d);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  }
+  return s.substring(0,10);
+}
+
+function getYoutubeThumbnail(url) {
+  const patterns = [
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtu\.be\/([^?&]+)/,
+    /youtube\.com\/embed\/([^?&]+)/,
+    /youtube\.com\/shorts\/([^?&]+)/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
+  }
+  return null;
+}
+
+function renderAssetPreview(url, type, thumbUrl) {
+  if (!url) return '';
+  const isDrive = url.includes("drive.google.com");
+  const isInsta = url.includes("instagram.com");
+  const isYT    = url.includes("youtube.com") || url.includes("youtu.be");
+  const icon    = isDrive ? "📁" : isInsta ? "📷" : isYT ? "▶️" : "🔗";
+  const typeLbl = isDrive ? "Google Drive" : isInsta ? "Instagram" : isYT ? "YouTube" : "링크";
+  const shortUrl = url.length > 45 ? url.substring(0, 45) + "…" : url;
+
+  let thumbHtml = '';
+
+  if (thumbUrl && thumbUrl.trim()) {
+    // 직접 입력한 썸네일 우선
+    thumbHtml = `<div class="asset-thumb-wrap"><img class="asset-thumb" src="${thumbUrl.trim()}" onerror="this.parentElement.innerHTML='<div class=\\'asset-thumb-ph\\'>${icon}</div>'" loading="lazy"></div>`;
+  } else if (isYT) {
+    // 유튜브 자동 썸네일
+    const ytThumb = getYoutubeThumbnail(url);
+    thumbHtml = ytThumb
+      ? `<div class="asset-thumb-wrap"><img class="asset-thumb" src="${ytThumb}" onerror="this.parentElement.innerHTML='<div class=\\'asset-thumb-ph\\'>▶️</div>'" loading="lazy"></div>`
+      : `<div class="asset-thumb-wrap"><div class="asset-thumb-ph">▶️</div></div>`;
+  } else if (isDrive) {
+    // 구글 드라이브 썸네일
+    const m = url.match(/[-\w]{25,}/);
+    thumbHtml = m
+      ? `<div class="asset-thumb-wrap"><img class="asset-thumb" src="https://drive.google.com/thumbnail?id=${m[0]}&sz=w400" onerror="this.parentElement.innerHTML='<div class=\\'asset-thumb-ph\\'>📁</div>'" loading="lazy"></div>`
+      : `<div class="asset-thumb-wrap"><div class="asset-thumb-ph">📁</div></div>`;
+  } else {
+    // SNS 링크 등 — 썸네일 없음 (직접 이미지 입력 필요)
+    thumbHtml = `<div class="asset-thumb-wrap"><div class="asset-thumb-ph">${icon}</div></div>`;
+  }
+
+  return `
+    <div class="asset-item" onclick="window.open('${url}','_blank')">
+      ${thumbHtml}
+      <div class="asset-info">
+        <div class="asset-type-lbl">${typeLbl}</div>
+        <div class="asset-url-txt" title="${url}">${shortUrl}</div>
+      </div>
+    </div>`;
+}
+
+function renderPortfolio() {
+  document.getElementById("pf-ct").textContent = portfolioItems.length;
+  const submitted = portfolioItems.filter(p=>p.is_submitted===true||p.is_submitted==="TRUE").length;
+  const total = portfolioItems.length;
+  document.getElementById("s-dot").style.background = submitted>0?"var(--green)":total>0?"var(--amber)":"var(--text3)";
+  document.getElementById("s-text").innerHTML = `<b>${total}건</b> 기록됨${submitted>0?` · <b>${submitted}건</b> 제출 완료`:" · 미제출"}`;
+  const list = document.getElementById("pf-list");
+  if (!total) { list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>아직 기록된 작업물이 없어요</div>`; return; }
+  list.innerHTML = portfolioItems.map(item => {
+    const done = item.is_submitted===true||item.is_submitted==="TRUE";
+    const sp = item.status==="완료"
+      ? `<span class="status-pill" style="background:var(--green-light);color:var(--green)">완료</span>`
+      : `<span class="status-pill" style="background:var(--amber-light);color:var(--amber)">진행중</span>`;
+    const cc = getContribColor(item.contribution_pct);
+    const assets = (() => { try { return JSON.parse(item.asset_url||"[]"); } catch(e) { return item.asset_url?[{type:item.asset_type||"link",url:item.asset_url}]:[]; } })();
+    return `
+    <div class="pf-card">
+      <div class="pf-card-hd" onclick="toggleCard('${item.id}')">
+        ${sp}
+        <div class="pf-card-info">
+          <div class="pf-card-title">${item.client||''} ${item.channel||''} · ${item.work_title||''}</div>
+          <div class="pf-card-meta">
+            <span>${formatDate(item.date_start)} ~ ${formatDate(item.date_end)}</span>
+            <span class="contrib-pill" style="background:${cc.bg};color:${cc.color}">기여율 ${item.contribution_pct||0}%</span>
+            ${item.collaborator?`<span>협업: ${item.collaborator}</span>`:''}
+          </div>
+        </div>
+        <div class="pf-card-acts">
+          ${done?'<span style="font-size:11px;color:var(--green);font-weight:600">제출완료</span>'
+            :`<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editItem('${item.id}')">수정</button>
+              <button class="btn btn-danger" onclick="event.stopPropagation();deleteItem('${item.id}')">삭제</button>`}
+          <span style="font-size:11px;color:var(--text3)">▾</span>
+        </div>
+      </div>
+      <div class="pf-card-body" id="body-${item.id}">
+        <div class="pf-body-grid">
+          <div class="pf-field"><div class="pf-fl">디자인 툴</div><div class="pf-fv">${item.tools_design||'—'}</div></div>
+          <div class="pf-field"><div class="pf-fl">AI 활용</div><div class="pf-fv">${item.ai_usage||'—'}${item.ai_tools?` · ${item.ai_tools}`:''}${item.ai_detail?`<div style="font-size:12px;color:var(--text2);margin-top:3px">${item.ai_detail}</div>`:''}</div></div>
+        </div>
+        ${item.work_desc?`<div class="pf-txt">${item.work_desc}</div>`:''}
+        ${assets.length?`<div class="assets-wrap"><div class="assets-title">첨부 작업물</div><div class="assets-grid">${assets.map(a=>renderAssetPreview(a.url,a.type,a.thumbUrl||"")).join('')}</div></div>`:''}
+        ${(item.tip_consider||item.tip_develop||item.tip_quality)?`
+        <div class="pf-tip-wrap">
+          <div class="pf-tip-hd">✦ 작성 TIP</div>
+          ${item.tip_consider?`<div class="pf-tip-item"><div class="pf-tip-lbl">고려한 포인트</div><div class="pf-tip-txt">${item.tip_consider}</div></div>`:''}
+          ${item.tip_develop?`<div class="pf-tip-item"><div class="pf-tip-lbl">발전 포인트</div><div class="pf-tip-txt">${item.tip_develop}</div></div>`:''}
+          ${item.tip_quality?`<div class="pf-tip-item"><div class="pf-tip-lbl">완성도 & 개선 포인트</div><div class="pf-tip-txt">${item.tip_quality}</div></div>`:''}
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) { document.getElementById("body-"+id)?.classList.toggle("open"); }
+
+// 첨부 필드
+function addAssetField(url='', type='sns_link', thumbUrl='') {
+  const idx = assetFields.length;
+  assetFields.push({ url, type, thumbUrl });
+  const wrap = document.getElementById("asset-list-form");
+  const div = document.createElement("div");
+  div.className = "asset-form-item";
+  div.id = "af-"+idx;
+  div.innerHTML = `
+    <div class="attach-type-row">
+      <button class="att-type-btn ${type==='sns_link'?'on':''}" onclick="setAType(${idx},this,'sns_link')">🔗 SNS 링크</button>
+      <button class="att-type-btn ${type==='drive_link'?'on':''}" onclick="setAType(${idx},this,'drive_link')">📁 드라이브</button>
+    </div>
+    <div style="margin-bottom:7px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:500">링크</div>
+      <div class="asset-form-row">
+        <input class="f-input" style="flex:1;margin-bottom:0" type="text" placeholder="SNS 링크 또는 드라이브 링크" value="${url}" oninput="assetFields[${idx}].url=this.value">
+        <button class="btn btn-danger btn-sm" onclick="removeAF(${idx})">삭제</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:500">썸네일 이미지 URL <span style="font-weight:400">(선택 — 작업물 이미지를 직접 캡처 후 드라이브에 올려 링크 입력)</span></div>
+      <input class="f-input" style="margin-bottom:0" type="text" placeholder="예) https://drive.google.com/..." value="${thumbUrl}" oninput="assetFields[${idx}].thumbUrl=this.value">
+    </div>`;
+  wrap.appendChild(div);
+}
+function setAType(idx,btn,type) { assetFields[idx].type=type; btn.closest(".attach-type-row").querySelectorAll(".att-type-btn").forEach(b=>b.classList.remove("on")); btn.classList.add("on"); }
+function removeAF(idx) { document.getElementById("af-"+idx)?.remove(); assetFields[idx]=null; }
+
+// 폼
+function openAddForm() { editingId=null; assetFields=[]; document.getElementById("asset-list-form").innerHTML=""; document.getElementById("form-title-label").textContent="작업물 추가"; clearForm(); document.getElementById("pf-form").style.display="block"; document.getElementById("pf-form").scrollIntoView({behavior:"smooth"}); }
+function editItem(id) {
+  const item = portfolioItems.find(p=>p.id==id); if(!item) return;
+  editingId=id; assetFields=[]; document.getElementById("asset-list-form").innerHTML="";
+  document.getElementById("form-title-label").textContent="작업물 수정";
+  fillForm(item);
+  try { const assets=JSON.parse(item.asset_url||"[]"); assets.forEach(a=>addAssetField(a.url,a.type,a.thumbUrl||"")); } catch(e) { if(item.asset_url) addAssetField(item.asset_url,item.asset_type||"sns_link",""); }
+  document.getElementById("pf-form").style.display="block"; document.getElementById("pf-form").scrollIntoView({behavior:"smooth"});
+}
+function clearForm() {
+  ["f-client","f-title","f-tools","f-collab","f-desc","f-tip1","f-tip2","f-tip3"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  ["f-channel","f-status"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("f-date-start").value=""; document.getElementById("f-date-end").value="";
+  document.getElementById("f-contrib").value=100; document.getElementById("f-contrib-val").textContent="100%";
+  document.getElementById("f-collab-pct").value=""; document.getElementById("f-ai-tools").value=""; document.getElementById("f-ai-detail").value="";
+  document.getElementById("form-id").value="";
+  document.querySelectorAll(".ai-opt").forEach(el=>el.classList.remove("on")); document.querySelector(".ai-opt").classList.add("on"); selectedAI="미활용";
+  document.getElementById("ai-detail-wrap").style.display="none";
+}
+function fillForm(item) {
+  document.getElementById("form-id").value=item.id;
+  document.getElementById("f-client").value=item.client||""; document.getElementById("f-channel").value=item.channel||"";
+  document.getElementById("f-title").value=item.work_title||""; document.getElementById("f-status").value=item.status||"";
+  document.getElementById("f-date-start").value=formatDate(item.date_start); document.getElementById("f-date-end").value=formatDate(item.date_end);
+  document.getElementById("f-contrib").value=item.contribution_pct||100; document.getElementById("f-contrib-val").textContent=(item.contribution_pct||100)+"%";
+  document.getElementById("f-tools").value=item.tools_design||""; document.getElementById("f-collab").value=item.collaborator||"";
+  document.getElementById("f-collab-pct").value=item.collaborator_pct||""; document.getElementById("f-desc").value=item.work_desc||"";
+  document.getElementById("f-tip1").value=item.tip_consider||""; document.getElementById("f-tip2").value=item.tip_develop||""; document.getElementById("f-tip3").value=item.tip_quality||"";
+  const ai=item.ai_usage||"미활용";
+  document.querySelectorAll(".ai-opt").forEach(el=>el.classList.toggle("on",el.textContent===ai)); selectedAI=ai;
+  document.getElementById("ai-detail-wrap").style.display=ai!=="미활용"?"block":"none";
+  document.getElementById("f-ai-tools").value=item.ai_tools||""; document.getElementById("f-ai-detail").value=item.ai_detail||"";
+}
+function closeForm() { document.getElementById("pf-form").style.display="none"; editingId=null; }
+
+async function saveItem() {
+  const req=[{id:"f-client"},{id:"f-channel"},{id:"f-title"},{id:"f-status"},{id:"f-date-start"},{id:"f-date-end"},{id:"f-tools"}];
+  let valid=true;
+  req.forEach(r=>{const el=document.getElementById(r.id);if(!el.value.trim()){el.classList.add("err");valid=false;}else el.classList.remove("err");});
+  if(!valid){showNotif("필수 항목을 모두 입력해주세요");return;}
+  const btn=document.getElementById("save-btn"); btn.disabled=true; btn.innerHTML='<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span>';
+  const assets=assetFields.filter(a=>a&&a.url.trim()).map(a=>({type:a.type,url:a.url.trim(),thumbUrl:a.thumbUrl||""}));
+  const body={action:"savePortfolioItem",member_email:currentUser.email,id:editingId||"",
+    period:activePfPeriod,
+    client:document.getElementById("f-client").value.trim(),channel:document.getElementById("f-channel").value,
+    work_title:document.getElementById("f-title").value.trim(),status:document.getElementById("f-status").value,
+    date_start:document.getElementById("f-date-start").value,date_end:document.getElementById("f-date-end").value,
+    contribution_pct:document.getElementById("f-contrib").value,tools_design:document.getElementById("f-tools").value.trim(),
+    collaborator:document.getElementById("f-collab").value.trim(),collaborator_pct:document.getElementById("f-collab-pct").value,
+    ai_usage:selectedAI,ai_tools:document.getElementById("f-ai-tools").value.trim(),ai_detail:document.getElementById("f-ai-detail").value.trim(),
+    asset_type:"multi",asset_url:JSON.stringify(assets),
+    work_desc:document.getElementById("f-desc").value.trim(),tip_consider:document.getElementById("f-tip1").value.trim(),
+    tip_develop:document.getElementById("f-tip2").value.trim(),tip_quality:document.getElementById("f-tip3").value.trim()};
+  const data=await apiPost(body);
+  btn.disabled=false; btn.textContent="저장";
+  if(data.ok){showNotif(editingId?"수정되었습니다":"저장되었습니다");closeForm();await loadPortfolio();}
+  else showNotif("저장 실패: "+data.error);
+}
+async function deleteItem(id){if(!confirm("삭제하시겠어요?"))return;const data=await apiPost({action:"deletePortfolioItem",id});if(data.ok){showNotif("삭제되었습니다");await loadPortfolio();}else showNotif("삭제 실패: "+data.error);}
+async function openSubmitConfirm(){
+  const unsub=portfolioItems.filter(p=>p.is_submitted!==true&&p.is_submitted!=="TRUE").length;
+  if(!unsub){showNotif("제출할 작업물이 없어요");return;}
+  if(!confirm(`미제출 작업물 ${unsub}건을 반기 제출하겠습니까?\n제출 후에는 수정이 불가합니다.`))return;
+  showLoading(true);const data=await apiPost({action:"submitPortfolio",email:currentUser.email,period:activePfPeriod});showLoading(false);
+  if(data.ok){showNotif(`${data.submitted_count}건 제출 완료`);await loadPortfolio();}else showNotif("제출 실패: "+data.error);
+}
+
+// ── 툴 스킬 반기 탭 ──
+function renderPeriodTabs() {
+  const wrap = document.getElementById("period-tabs");
+  if (!wrap) return;
+  wrap.innerHTML = periods.map(p => `
+    <button class="period-tab ${p===activePeriod?'active':''}" onclick="selectPeriod('${p}',this)">${p}</button>`).join('');
+}
+function selectPeriod(p, btn) {
+  activePeriod = p;
+  renderPeriodTabs();
+  document.getElementById("skill-period-label").textContent = p + " 툴 목록";
+  renderSkills();
+}
+function addPeriod() {
+  const name = prompt("반기명을 입력하세요 (예: 27년도 상반기)");
+  if (!name || !name.trim()) return;
+  if (periods.includes(name.trim())) { showNotif("이미 존재하는 반기예요"); return; }
+  periods.push(name.trim());
+  activePeriod = name.trim();
+  renderPeriodTabs();
+  document.getElementById("skill-period-label").textContent = activePeriod + " 툴 목록";
+  renderSkills();
+}
+
+async function loadSkills() {
+  const data = await apiGet({ action:"getSkills", email:currentUser.email, period:activePeriod });
+  if (data.ok) { skillItems = data.items||[]; renderSkills(); }
+}
+const lvMap={"전문가 리드":"lv5","고급 응용":"lv4","실무 활용":"lv3","기본 활용":"lv2","기초 경험":"lv1"};
+function renderSkills() {
+  const el = document.getElementById("skill-list");
+  const filtered = skillItems.filter(s => !s.period || s.period === activePeriod);
+  if (!filtered.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🛠</div>${activePeriod}에 등록된 툴이 없어요</div>`; return; }
+  el.innerHTML = filtered.map(s=>`
+    <div class="skill-item">
+      <div style="flex:1">
+        <div class="skill-name">${s.tool_name} <span class="skill-type">${s.tool_type}</span></div>
+        ${s.experience?`<div class="skill-desc">${s.experience}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span class="lv ${lvMap[s.level]||'lv1'}">${s.level||'미기재'}</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteSkill('${s.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+}
+function openSkillForm(){document.getElementById("skill-form").style.display="block";document.getElementById("sk-name").focus();}
+function closeSkillForm(){document.getElementById("skill-form").style.display="none";}
+async function saveSkill(){
+  const name=document.getElementById("sk-name").value.trim(),type=document.getElementById("sk-type").value,level=document.getElementById("sk-level").value;
+  if(!name||!type||!level){showNotif("툴 이름, 유형, 숙련도를 모두 입력해주세요");return;}
+  const data=await apiPost({action:"saveSkill",member_email:currentUser.email,tool_name:name,tool_type:type,level,experience:document.getElementById("sk-exp").value.trim(),period:activePeriod});
+  if(data.ok){showNotif("저장되었습니다");closeSkillForm();["sk-name","sk-type","sk-level","sk-exp"].forEach(id=>document.getElementById(id).value="");await loadSkills();}
+  else showNotif("저장 실패: "+data.error);
+}
+async function deleteSkill(id){if(!confirm("삭제하시겠어요?"))return;const data=await apiPost({action:"deleteSkill",id});if(data.ok){showNotif("삭제되었습니다");await loadSkills();}}
+
+// ── 프로필 ──
+function renderProfile(){
+  const f=[["이름",currentUser.name],["직책",currentUser.rank],["본부",currentUser.dept],["팀",currentUser.team],["직무",currentUser.job],["입사일",formatDate(currentUser.joined)]];
+  document.getElementById("profile-grid").innerHTML=f.map(([l,v])=>`<div class="form-row"><div class="f-label">${l}</div><div class="readonly-field">${v||"—"}</div></div>`).join('');
+}
+
+// ── UI ──
+function switchTab(id,btn){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(t=>t.classList.remove("active"));
+  document.getElementById("section-"+id).classList.add("active");
+  btn.classList.add("active");
+}
+function selectAI(el,val){
+  document.querySelectorAll(".ai-opt").forEach(o=>o.classList.remove("on")); el.classList.add("on"); selectedAI=val;
+  document.getElementById("ai-detail-wrap").style.display=val!=="미활용"?"block":"none";
+}
+function toggleCaution() {
+  const body = document.getElementById("caution-body");
+  const chevron = document.getElementById("caution-chevron");
+  body.classList.toggle("open");
+  chevron.classList.toggle("open");
+}
+
+function showLoading(show){document.getElementById("loading-overlay").style.display=show?"flex":"none";}
+function showNotif(msg){const n=document.getElementById("notif");n.textContent=msg;n.classList.add("show");setTimeout(()=>n.classList.remove("show"),2400);}
+</script>
+</body>
+</html>

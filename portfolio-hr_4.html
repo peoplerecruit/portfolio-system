@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포트폴리오 아카이빙 — HR</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+:root {
+  --bg:#F4F5F9;--surface:#FFF;--surface2:#F0F1F6;--border:#E4E6EE;--border2:#D0D3E0;
+  --text:#1A1C26;--text2:#565A70;--text3:#9699AE;
+  --accent:#5B6BF5;--accent2:#7C3AED;
+  --accent-grad:linear-gradient(135deg,#5B6BF5 0%,#7C3AED 100%);
+  --accent-light:#EEF0FE;--accent-light2:#F3F0FF;
+  --green:#12A76A;--green-light:#E6F7F0;
+  --amber:#E07B00;--amber-light:#FEF3E2;
+  --red:#E03B3B;--red-light:#FEF0EE;
+  --purple:#7C3AED;--purple-light:#F3F0FF;
+  --sidebar-w:220px;
+  --r:14px;--r-sm:8px;--r-xs:5px;
+  --shadow:0 1px 4px rgba(91,107,245,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 20px rgba(91,107,245,.10),0 2px 6px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
+
+/* ── 로그인 ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#F0F1FB,#EDE8FB);}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px 40px;width:400px;box-shadow:var(--shadow-md);}
+.login-brand{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+.login-title{font-size:26px;font-weight:700;letter-spacing:-.6px;margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px;line-height:1.6;}
+.f-label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.04em;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+.f-input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;font-family:'Pretendard',sans-serif;background:var(--surface);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:12px;}
+.f-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,107,245,.1);}
+.f-input::placeholder{color:var(--text3);}
+.f-input.err{border-color:var(--red);}
+.login-btn{width:100%;background:var(--accent-grad);color:#fff;border:none;border-radius:var(--r-sm);padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Pretendard',sans-serif;transition:opacity .15s,transform .1s;}
+.login-btn:hover{opacity:.9;transform:translateY(-1px);}
+.login-err{font-size:12px;color:var(--red);margin-top:8px;display:none;}
+
+/* ── 레이아웃 ── */
+.app-layout{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;}
+.sidebar-top{padding:22px 18px 16px;border-bottom:1px solid var(--border);}
+.sidebar-brand{font-size:13px;font-weight:700;letter-spacing:-.3px;}
+.sidebar-role{font-size:10px;font-weight:600;color:var(--purple);background:var(--purple-light);padding:2px 8px;border-radius:20px;margin-top:5px;display:inline-block;}
+.sidebar-nav{flex:1;padding:14px 10px;overflow-y:auto;}
+.nav-sec-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:0 8px;margin-bottom:5px;margin-top:14px;}
+.nav-sec-title:first-child{margin-top:0;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;color:var(--text2);font-size:13px;font-weight:400;transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:'Pretendard',sans-serif;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:600;}
+.nav-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0;}
+.sidebar-bottom{padding:14px 18px;border-top:1px solid var(--border);}
+.user-block{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.user-av{width:32px;height:32px;border-radius:50%;background:var(--accent-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.user-nm{font-size:13px;font-weight:600;}
+.user-role-lbl{font-size:11px;color:var(--text3);}
+.btn-sidebar{font-size:11px;color:var(--text3);background:var(--surface2);border:none;border-radius:var(--r-xs);padding:6px 10px;cursor:pointer;font-family:'Pretendard',sans-serif;transition:all .15s;}
+.btn-sidebar:hover{background:var(--border);color:var(--text);}
+
+/* ── 메인 ── */
+.main-area{margin-left:var(--sidebar-w);flex:1;min-height:100vh;}
+.content{padding:28px 32px;max-width:1100px;}
+.section{display:none;}
+.section.active{display:block;}
+.page-title{font-size:20px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--text3);margin-bottom:20px;}
+
+/* ── 통계 카드 ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.stat-num{font-size:28px;font-weight:700;letter-spacing:-1px;}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* ── 사업부 탭 ── */
+.dept-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.dept-tab{padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;background:var(--surface);transition:all .15s;font-family:'Pretendard',sans-serif;}
+.dept-tab:hover{border-color:var(--accent);color:var(--accent);}
+.dept-tab.active{background:var(--accent-grad);color:#fff;border-color:transparent;}
+
+/* ── 반기 탭 ── */
+.period-tabs-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.period-tab{padding:7px 16px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;background:var(--surface);transition:all .15s;font-family:'Pretendard',sans-serif;}
+.period-tab:hover{border-color:var(--accent);color:var(--accent);}
+.period-tab.active{background:var(--accent-grad);color:#fff;border-color:transparent;}
+.add-period-btn{padding:7px 14px;border:1.5px dashed var(--border2);border-radius:20px;font-size:13px;color:var(--text3);cursor:pointer;background:none;font-family:'Pretendard',sans-serif;transition:all .15s;}
+.add-period-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── 테이블 ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px;}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;}
+.table-toolbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.search-wrap{position:relative;}
+.search-wrap::before{content:'🔍';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;}
+.search-input{border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px 7px 28px;font-size:12px;background:var(--bg);color:var(--text);width:180px;outline:none;font-family:'Pretendard',sans-serif;transition:border-color .15s;}
+.search-input:focus{border-color:var(--accent);}
+.filter-btn{padding:6px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;background:var(--bg);color:var(--text2);cursor:pointer;font-family:'Pretendard',sans-serif;transition:all .15s;font-weight:500;}
+.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--surface2);font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--surface2);}
+tbody td{padding:11px 14px;font-size:13px;vertical-align:middle;}
+
+/* ── 배지 ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.badge-green{background:var(--green-light);color:var(--green);}
+.badge-amber{background:var(--amber-light);color:var(--amber);}
+.badge-red{background:var(--red-light);color:var(--red);}
+.badge-gray{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.badge-accent{background:var(--accent-light);color:var(--accent);}
+.badge-purple{background:var(--purple-light);color:var(--purple);}
+.grade-chip{font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;}
+.grade-NI{background:var(--red-light);color:var(--red);}
+.grade-ME{background:var(--amber-light);color:var(--amber);}
+.grade-EE{background:var(--green-light);color:var(--green);}
+.grade-S{background:var(--purple-light);color:var(--purple);}
+.grade-none{background:var(--surface2);color:var(--text3);}
+
+/* ── 카드 ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow);}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);}
+.card-title{font-size:13px;font-weight:600;}
+.card-body{padding:16px 18px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── 멤버 상세 ── */
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--text3);font-size:13px;cursor:pointer;margin-bottom:20px;border:none;background:none;font-family:'Pretendard',sans-serif;padding:0;transition:color .15s;font-weight:500;}
+.back-btn:hover{color:var(--accent);}
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 26px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);}
+.profile-left{display:flex;align-items:center;gap:16px;}
+.profile-av{width:48px;height:48px;border-radius:12px;background:var(--accent-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;}
+.profile-name{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.profile-tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+
+/* ── 포트폴리오 아이템 (읽기전용) ── */
+.pf-item{border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;margin-bottom:8px;background:var(--surface);}
+.pf-item-hd{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .1s;}
+.pf-item-hd:hover{background:var(--surface2);}
+.pf-status-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.pf-item-info{flex:1;min-width:0;}
+.pf-item-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pf-item-meta{font-size:11px;color:var(--text3);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.contrib-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.pf-item-body{border-top:1px solid var(--border);display:none;background:var(--bg);}
+.pf-item-body.open{display:block;}
+.pf-body-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
+.pf-field{display:flex;flex-direction:column;gap:3px;}
+.pf-fl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);}
+.pf-fv{font-size:13px;color:var(--text);}
+.pf-txt{margin:0 16px 12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap;}
+.pf-tip-wrap{margin:0 16px 16px;}
+.pf-tip-hd{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:8px;}
+.pf-tip-item{margin-bottom:8px;}
+.pf-tip-lbl{font-size:10px;color:var(--text3);margin-bottom:3px;}
+.pf-tip-txt{font-size:13px;color:var(--text2);line-height:1.6;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);}
+.assets-wrap{padding:0 16px 16px;}
+.assets-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px;}
+.assets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.asset-item{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;cursor:pointer;}
+.asset-thumb-wrap{width:100%;aspect-ratio:1/1;background:var(--surface2);overflow:hidden;}
+.asset-thumb{width:100%;height:100%;object-fit:cover;display:block;}
+.asset-thumb-ph{width:100%;height:100%;background:linear-gradient(135deg,var(--accent-light),var(--accent-light2));display:flex;align-items:center;justify-content:center;font-size:32px;}
+.asset-info{padding:6px 9px 8px;}
+.asset-type-lbl{font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;}
+.asset-url-txt{font-size:11px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+
+/* ── 평가 결과 ── */
+.eval-result{background:var(--text);color:#fff;border-radius:var(--r);padding:22px 24px;margin-bottom:12px;}
+.eval-grade-big{font-size:42px;font-weight:700;letter-spacing:-2px;line-height:1;}
+.eval-grade-lbl{font-size:12px;opacity:.6;margin-top:4px;}
+.eval-comment-txt{font-size:13px;line-height:1.8;opacity:.9;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);}
+
+/* ── 멤버 관리 폼 ── */
+.form-row{margin-bottom:12px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+select.f-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239699AE'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;cursor:pointer;}
+.form-div{height:1px;background:var(--border);margin:14px 0;}
+.form-section-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+
+/* ── 버튼 ── */
+.btn{border-radius:var(--r-sm);padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Pretendard',sans-serif;transition:all .15s;border:none;}
+.btn-accent{background:var(--accent-grad);color:#fff;}
+.btn-accent:hover{opacity:.9;transform:translateY(-1px);}
+.btn-outline{background:none;border:1.5px solid var(--border);color:var(--text2);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:none;border:1.5px solid #f0c0bd;color:var(--red);}
+.btn-danger:hover{background:var(--red-light);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+
+/* ── 스킬 ── */
+.skill-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.skill-item:last-child{border-bottom:none;}
+.lv{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.lv5{background:var(--accent-grad);color:#fff;}
+.lv4{background:var(--purple-light);color:var(--purple);}
+.lv3{background:var(--green-light);color:var(--green);}
+.lv2{background:var(--amber-light);color:var(--amber);}
+.lv1{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+
+/* ── 요약 차트 ── */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px;}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);}
+.summary-dept{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
+.summary-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.progress-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin:0 8px;}
+.progress-fill{height:100%;border-radius:2px;background:var(--accent-grad);}
+
+/* ── 모달 ── */
+.modal-bg{position:fixed;inset:0;background:rgba(26,28,38,.4);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-bg.show{display:flex;}
+.modal-box{background:var(--surface);border-radius:18px;padding:28px;width:520px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-md);}
+.modal-title{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px;}
+.modal-sub{font-size:12px;color:var(--text3);margin-bottom:20px;}
+
+/* ── 로딩/알림 ── */
+.loading-overlay{position:fixed;inset:0;background:rgba(244,245,249,.9);display:flex;align-items:center;justify-content:center;z-index:999;font-size:13px;color:var(--text3);gap:10px;backdrop-filter:blur(4px);}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.notif{position:fixed;bottom:24px;left:calc(var(--sidebar-w) + 50%);transform:translateX(-50%) translateY(8px);background:var(--text);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all .2s;pointer-events:none;z-index:1000;white-space:nowrap;}
+.notif.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.empty-state{text-align:center;padding:36px;color:var(--text3);}
+.empty-icon{font-size:28px;margin-bottom:8px;}
+.detail-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px;}
+.detail-tab{padding:11px 18px;font-size:13px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;font-family:'Pretendard',sans-serif;transition:all .15s;font-weight:500;}
+.detail-tab:hover{color:var(--text);}
+.detail-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700;}
+.readonly-field{padding:9px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;color:var(--text2);}
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="loading-overlay"><div class="spinner"></div>불러오는 중...</div>
+
+<!-- 로그인 -->
+<div class="login-wrap" id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-brand">포트폴리오 아카이빙</div>
+    <div class="login-title">HR 로그인</div>
+    <div class="login-sub">HR 계정으로 로그인하세요.<br>최초 비밀번호는 <b>0000</b>이에요.</div>
+    <label class="f-label">이메일</label>
+    <input class="f-input" type="text" id="email-input" placeholder="이메일 주소">
+    <label class="f-label">비밀번호</label>
+    <input class="f-input" type="password" id="pw-input" placeholder="비밀번호" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">로그인</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- 앱 -->
+<div id="app" style="display:none">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">포트폴리오 아카이빙</div>
+        <div class="sidebar-role">HR 관리자</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-sec-title">현황</div>
+        <button class="nav-item active" onclick="showSection('dashboard',this)"><span class="nav-icon">▦</span> 전체 대시보드</button>
+        <div class="nav-sec-title">구성원 관리</div>
+        <button class="nav-item" onclick="showSection('members',this)"><span class="nav-icon">👥</span> 사업부 목록</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="user-block">
+          <div class="user-av" id="user-av">HR</div>
+          <div>
+            <div class="user-nm" id="user-nm">HR 담당자</div>
+            <div class="user-role-lbl">HR 관리자</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="btn-sidebar" onclick="showPwModal()">비밀번호 변경</button>
+          <button class="btn-sidebar" onclick="logout()">로그아웃</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <div class="content">
+
+        <!-- 대시보드 -->
+        <div class="section active" id="section-dashboard">
+          <div class="page-title">전체 대시보드</div>
+          <div class="page-sub">제작직군 포트폴리오 아카이빙 현황</div>
+
+          <!-- 반기 탭 -->
+          <div class="period-tabs-wrap">
+            <div id="period-tabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            <button class="add-period-btn" onclick="addPeriod()">＋ 반기 추가</button>
+          </div>
+
+          <!-- 통계 -->
+          <div class="stats-row" id="stats-row">
+            <div class="stat-card"><div class="stat-label">전체 인원</div><div class="stat-num" id="st-total">—</div><div class="stat-sub">제작직군</div></div>
+            <div class="stat-card"><div class="stat-label">포트폴리오 제출</div><div class="stat-num" style="color:var(--green)" id="st-submitted">—</div><div class="stat-sub" id="st-submitted-pct">—</div></div>
+            <div class="stat-card"><div class="stat-label">리더 평가 완료</div><div class="stat-num" style="color:var(--accent)" id="st-evaluated">—</div><div class="stat-sub" id="st-evaluated-pct">—</div></div>
+            <div class="stat-card"><div class="stat-label">미제출</div><div class="stat-num" style="color:var(--amber)" id="st-pending">—</div><div class="stat-sub">리마인드 필요</div></div>
+          </div>
+
+          <!-- 시각화 차트 2개 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+            <!-- AI 활용률 -->
+            <div class="card" style="margin-bottom:0">
+              <div class="card-hd"><span class="card-title">🤖 AI 활용률</span><span id="ai-total-lbl" style="font-size:11px;color:var(--text3)"></span></div>
+              <div class="card-body">
+                <div id="ai-chart" style="display:flex;flex-direction:column;gap:8px"></div>
+              </div>
+            </div>
+            <!-- 평가 등급 분포 -->
+            <div class="card" style="margin-bottom:0">
+              <div class="card-hd"><span class="card-title">📊 평가 등급 분포</span><span id="grade-total-lbl" style="font-size:11px;color:var(--text3)"></span></div>
+              <div class="card-body">
+                <div id="grade-chart" style="display:flex;flex-direction:column;gap:8px"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 사업부별 요약 (클릭 시 사업부 목록으로 이동) -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)">사업부별 현황 <span style="font-weight:400;color:var(--text3);margin-left:4px">(클릭 시 해당 사업부 목록으로 이동)</span></div>
+          </div>
+          <div class="summary-grid" id="summary-grid"></div>
+        </div>
+
+        <!-- 사업부 목록 -->
+        <div class="section" id="section-members">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div class="page-title">사업부 목록</div>
+            <button class="btn btn-accent btn-sm" onclick="openAddMemberModal()">➕ 팀원 추가</button>
+          </div>
+          <div class="page-sub">구성원 관리 및 포트폴리오 전체 열람</div>
+
+          <!-- 반기 탭 -->
+          <div class="period-tabs-wrap">
+            <div id="period-tabs2" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+          </div>
+
+          <!-- 사업부 탭 -->
+          <div class="dept-tabs" id="dept-tabs"></div>
+
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <div class="table-toolbar-left">
+                <div class="search-wrap"><input class="search-input" type="text" placeholder="이름, 팀 검색..." oninput="filterMembers(this.value)"></div>
+                <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
+                <button class="filter-btn" onclick="setFilter('submitted',this)">제출완료</button>
+                <button class="filter-btn" onclick="setFilter('pending',this)">미제출</button>
+                <button class="filter-btn" onclick="setFilter('evaluated',this)">평가완료</button>
+              </div>
+              <button class="btn btn-accent btn-sm" onclick="exportExcel()">📥 엑셀 내보내기</button>
+            </div>
+            <table>
+              <thead><tr>
+                <th>이름</th><th>본부 / 팀</th><th>직책</th><th>포트폴리오</th><th>평가 상태</th><th>등급</th><th>관리</th>
+              </tr></thead>
+              <tbody id="member-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 팀원 상세 -->
+        <div class="section" id="section-detail">
+          <button class="back-btn" id="detail-back-btn" onclick="goBack()">← 팀원 목록으로</button>
+          <div id="detail-content"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div class="modal-bg" id="pw-modal">
+  <div class="modal-box" style="width:380px">
+    <div class="modal-title">비밀번호 변경</div>
+    <div class="modal-sub">현재 비밀번호를 입력하고 새 비밀번호를 설정하세요.</div>
+    <div class="form-row">
+      <div class="f-label">현재 비밀번호</div>
+      <input class="f-input" type="password" id="pw-current" placeholder="현재 비밀번호">
+    </div>
+    <div class="form-row">
+      <div class="f-label">새 비밀번호</div>
+      <input class="f-input" type="password" id="pw-new" placeholder="새 비밀번호 (4자 이상)">
+    </div>
+    <div class="form-row">
+      <div class="f-label">새 비밀번호 확인</div>
+      <input class="f-input" type="password" id="pw-confirm" placeholder="새 비밀번호 재입력">
+    </div>
+    <div class="login-err" id="pw-err" style="margin-bottom:10px;display:none"></div>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn btn-outline" onclick="closePwModal()">취소</button>
+      <button class="btn btn-accent" onclick="changePw()">변경하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 팀원 추가/수정 모달 -->
+<div class="modal-bg" id="member-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">팀원 추가</div>
+    <div class="modal-sub">Members 시트에 등록됩니다. 등록 후 바로 로그인 가능해요.</div>
+    <input type="hidden" id="modal-mode">
+    <div class="form-section-lbl">기본 정보</div>
+    <div class="form-grid">
+      <div class="form-row"><div class="f-label">이메일 <span style="color:var(--red)">●</span></div><input class="f-input" type="text" id="m-email" placeholder="이메일 주소"></div>
+      <div class="form-row"><div class="f-label">이름 <span style="color:var(--red)">●</span></div><input class="f-input" type="text" id="m-name" placeholder="홍길동"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><div class="f-label">본부</div><input class="f-input" type="text" id="m-dept" placeholder="소셜제작본부"></div>
+      <div class="form-row"><div class="f-label">팀</div><input class="f-input" type="text" id="m-team" placeholder="디자인팀"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><div class="f-label">직책</div><input class="f-input" type="text" id="m-rank" placeholder="AM / P"></div>
+      <div class="form-row"><div class="f-label">직무</div><input class="f-input" type="text" id="m-job" placeholder="콘텐츠디자이너"></div>
+    </div>
+    <div class="form-row"><div class="f-label">입사일</div><input class="f-input" type="date" id="m-joined"></div>
+    <div class="form-div"></div>
+    <div class="form-section-lbl">권한 설정</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="f-label">역할 <span style="color:var(--red)">●</span></div>
+        <select class="f-input" id="m-role">
+          <option value="member">팀원 (member)</option>
+          <option value="leader">리더 (leader)</option>
+          <option value="member,leader">팀원+리더 (member,leader)</option>
+          <option value="hr">HR (hr)</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="f-label">담당 리더 이메일</div><input class="f-input" type="text" id="m-leader-email" placeholder="leader@company.com"></div>
+    </div>
+    <div class="form-row"><div class="f-label">열람 가능 사업부 (리더용, 쉼표 구분)</div><input class="f-input" type="text" id="m-dept-scope" placeholder="소셜제작본부,소셜엠씨"></div>
+    <div class="login-err" id="modal-err" style="margin-bottom:8px"></div>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-accent" onclick="saveMember()" id="modal-save-btn">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbylpaiUCTxCeIsXwDkitfuZYgjWbJofsp6839Vd1ZVKGwetDjx0cF_DyZF-C-MmyveM/exec";
+
+let currentUser = null;
+let allMembers  = [];
+let summaryData = [];
+let filterStatus = 'all';
+let searchQuery  = '';
+let activeDept   = 'all';
+let periods = ["26년도 상반기","26년도 하반기"];
+let activePeriod = "26년도 상반기";
+let prevSection  = 'members';
+let editingEmail = null;
+let currentDetailEmail = null;
+const gradeLabels = {NI:'개선이 필요함',ME:'기대를 충족함',EE:'기대를 뛰어넘음',S:'매우 우수함'};
+const lvMap = {"전문가 리드":"lv5","고급 응용":"lv4","실무 활용":"lv3","기본 활용":"lv2","기초 경험":"lv1"};
+
+async function apiGet(params) {
+  const res = await fetch(API + "?" + new URLSearchParams(params));
+  return res.json();
+}
+async function apiPost(body) {
+  const url = API + "?" + new URLSearchParams(body);
+  const res = await fetch(url, { redirect:"follow" });
+  return res.json();
+}
+
+// ── 초기화 ──────────────────────────────────────────
+window.onload = () => {
+  const saved = localStorage.getItem("hr_email");
+  if (saved) loginWithEmail(saved, null);
+  else { showLoading(false); document.getElementById("login-screen").style.display = "flex"; }
+};
+
+async function login() {
+  const email = document.getElementById("email-input").value.trim();
+  const pw    = document.getElementById("pw-input").value.trim();
+  if (!email || !pw) { showErr("이메일과 비밀번호를 입력해주세요"); return; }
+  await loginWithEmail(email, pw);
+}
+
+async function loginWithEmail(email, pw) {
+  showLoading(true);
+  try {
+    const data = await apiGet({ action:"getUser", email });
+    if (!data.ok) { showLoading(false); document.getElementById("login-screen").style.display="flex"; showErr(data.error); return; }
+    const roles = String(data.user.role).split(",").map(r=>r.trim());
+    if (!roles.includes("hr")) { showLoading(false); document.getElementById("login-screen").style.display="flex"; showErr("HR 전용 페이지입니다."); return; }
+    if (pw !== null) {
+      const stored = data.user.password || "0000";
+      if (String(pw) !== String(stored)) { showLoading(false); document.getElementById("login-screen").style.display="flex"; showErr("비밀번호가 올바르지 않습니다."); return; }
+    }
+    currentUser = data.user;
+    localStorage.setItem("hr_email", email);
+    document.getElementById("user-nm").textContent = data.user.name;
+    document.getElementById("user-av").textContent = data.user.name[0];
+    renderPeriodTabs();
+    await loadDashboard();
+    showLoading(false);
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  } catch(e) {
+    showLoading(false);
+    document.getElementById("login-screen").style.display = "flex";
+    showErr("연결 오류: " + e.message);
+  }
+}
+function logout() { localStorage.removeItem("hr_email"); location.reload(); }
+
+// ── 비밀번호 변경 ─────────────────────────────────────
+function showPwModal() {
+  ["pw-current","pw-new","pw-confirm"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("pw-err").style.display = "none";
+  document.getElementById("pw-modal").classList.add("show");
+}
+function closePwModal() { document.getElementById("pw-modal").classList.remove("show"); }
+
+async function changePw() {
+  const cur = document.getElementById("pw-current").value.trim();
+  const nw  = document.getElementById("pw-new").value.trim();
+  const cf  = document.getElementById("pw-confirm").value.trim();
+  const errEl = document.getElementById("pw-err");
+
+  if (!cur) { errEl.textContent="현재 비밀번호를 입력해주세요"; errEl.style.display="block"; return; }
+  if (nw.length < 4) { errEl.textContent="비밀번호는 4자 이상이어야 해요"; errEl.style.display="block"; return; }
+  if (nw !== cf) { errEl.textContent="새 비밀번호가 일치하지 않아요"; errEl.style.display="block"; return; }
+  if (cur !== String(currentUser.password || "0000")) {
+    errEl.textContent="현재 비밀번호가 올바르지 않아요"; errEl.style.display="block"; return;
+  }
+
+  const data = await apiPost({ action:"changePassword", email:currentUser.email, new_password:nw });
+  if (data.ok) {
+    currentUser.password = nw;
+    closePwModal();
+    showNotif("비밀번호가 변경되었습니다");
+  } else {
+    errEl.textContent = "변경 실패: " + data.error;
+    errEl.style.display = "block";
+  }
+}
+function showErr(msg) { const el=document.getElementById("login-err"); el.textContent=msg; el.style.display="block"; }
+
+// ── 반기 탭 ──────────────────────────────────────────
+function renderPeriodTabs() {
+  ["period-tabs","period-tabs2"].forEach(id => {
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    wrap.innerHTML = periods.map(p=>`
+      <button class="period-tab ${p===activePeriod?'active':''}" onclick="selectPeriod('${p}')">${p}</button>`).join('');
+  });
+}
+async function selectPeriod(p) {
+  activePeriod = p;
+  renderPeriodTabs();
+  const active = document.querySelector(".section.active");
+  if (active?.id === "section-dashboard") await loadDashboard();
+  else if (active?.id === "section-members") await loadMembers();
+}
+function addPeriod() {
+  const name = prompt("반기명을 입력하세요 (예: 27년도 상반기)");
+  if (!name?.trim()) return;
+  if (periods.includes(name.trim())) { showNotif("이미 존재하는 반기예요"); return; }
+  periods.push(name.trim());
+  selectPeriod(name.trim());
+}
+
+// ── 대시보드 ─────────────────────────────────────────
+async function loadDashboard() {
+  const data = await apiGet({ action:"getAllData", email:currentUser.email, period:activePeriod });
+  if (!data.ok) { showNotif("로드 실패: "+data.error); return; }
+  summaryData = data.summary || [];
+
+  const total     = summaryData.length;
+  const submitted = summaryData.filter(m=>m.submitted).length;
+  const evaluated = summaryData.filter(m=>m.evaluated).length;
+  const pending   = summaryData.filter(m=>!m.submitted).length;
+
+  document.getElementById("st-total").textContent     = total;
+  document.getElementById("st-submitted").textContent = submitted;
+  document.getElementById("st-submitted-pct").textContent = total ? Math.round(submitted/total*100)+"% 완료" : "—";
+  document.getElementById("st-evaluated").textContent = evaluated;
+  document.getElementById("st-evaluated-pct").textContent = submitted ? Math.round(evaluated/submitted*100)+"% 완료" : "—";
+  document.getElementById("st-pending").textContent   = pending;
+
+  // ── AI 활용률 차트 ──
+  const aiCounts = { "미활용":0, "일부활용":0, "전체활용":0 };
+  let aiTotal = 0;
+  summaryData.forEach(m => {
+    if (m.submitted) aiTotal++;
+  });
+  // AI 데이터는 portfolio에서 직접 집계 (summaryData에 없어서 근사치 표시)
+  const aiColors = { "미활용":"var(--text3)", "일부활용":"var(--accent)", "전체활용":"var(--green)" };
+  const aiLabelEl = document.getElementById("ai-total-lbl");
+  if (aiLabelEl) aiLabelEl.textContent = `제출자 ${aiTotal}명 기준`;
+  // portfolio 데이터가 없으므로 안내 메시지
+  const aiChartEl = document.getElementById("ai-chart");
+  if (aiChartEl) {
+    if (aiTotal === 0) {
+      aiChartEl.innerHTML = `<div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div>제출된 포트폴리오가 없어요</div>`;
+    } else {
+      // getAllData에 ai_usage 집계 추가 필요 — 현재는 포트폴리오 상세 없이 요약만 있어 안내 표시
+      aiChartEl.innerHTML = `<div style="font-size:12px;color:var(--text2);line-height:1.7;padding:8px 0">
+        <div style="margin-bottom:10px">각 팀원의 작업물 AI 활용 현황이에요.</div>
+        ${["미활용","일부활용","전체활용"].map(label => {
+          const cnt = summaryData.filter(m => m.ai_usage === label).length;
+          const pct = aiTotal ? Math.round(cnt / aiTotal * 100) : 0;
+          return `<div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="font-size:12px;color:var(--text2)">${label}</span>
+              <span style="font-size:12px;font-weight:600">${cnt}명 (${pct}%)</span>
+            </div>
+            <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+              <div style="height:100%;background:${aiColors[label]};border-radius:3px;width:${pct}%;transition:width .5s"></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+  }
+
+  // ── 평가 등급 분포 차트 ──
+  const grades = {NI:0, ME:0, EE:0, S:0};
+  let gradedTotal = 0;
+  summaryData.forEach(m => { if (m.grade && grades[m.grade] !== undefined) { grades[m.grade]++; gradedTotal++; } });
+  const gradeColors = { NI:"var(--red)", ME:"var(--amber)", EE:"var(--green)", S:"var(--purple)" };
+  const gradeLabelEl = document.getElementById("grade-total-lbl");
+  if (gradeLabelEl) gradeLabelEl.textContent = `평가완료 ${gradedTotal}명`;
+  const gradeChartEl = document.getElementById("grade-chart");
+  if (gradeChartEl) {
+    if (gradedTotal === 0) {
+      gradeChartEl.innerHTML = `<div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div>완료된 평가가 없어요</div>`;
+    } else {
+      gradeChartEl.innerHTML = Object.entries(grades).map(([g, cnt]) => {
+        const pct = gradedTotal ? Math.round(cnt / gradedTotal * 100) : 0;
+        return `<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span class="grade-chip grade-${g}" style="font-size:11px">${g}</span>
+              <span style="font-size:12px;color:var(--text2)">${gradeLabels[g]}</span>
+            </div>
+            <span style="font-size:12px;font-weight:600">${cnt}명 (${pct}%)</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;background:${gradeColors[g]};border-radius:3px;width:${pct}%;transition:width .5s"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── 사업부별 요약 (클릭 시 해당 사업부 목록으로 이동) ──
+  const depts = [...new Set(summaryData.map(m => m.dept || "미지정"))];
+  document.getElementById("summary-grid").innerHTML = depts.map(dept => {
+    const members = summaryData.filter(m => (m.dept || "미지정") === dept);
+    const sub = members.filter(m => m.submitted).length;
+    const ev  = members.filter(m => m.evaluated).length;
+    const pct = members.length ? Math.round(sub / members.length * 100) : 0;
+    return `
+    <div class="summary-card" onclick="goToDept('${dept}')" style="cursor:pointer;transition:box-shadow .15s" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow=''">
+      <div class="summary-dept">${dept}</div>
+      <div class="summary-row"><span style="font-size:12px;color:var(--text2)">${members.length}명</span><span class="badge ${sub===members.length?'badge-green':'badge-amber'}">${sub}/${members.length} 제출</span></div>
+      <div class="progress-bar" style="margin:6px 0 4px"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="summary-row"><span style="font-size:11px;color:var(--text3)">평가완료</span><span style="font-size:12px;font-weight:600;color:var(--accent)">${ev}명</span></div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right">목록 보기 →</div>
+    </div>`;
+  }).join('');
+}
+
+// ── 사업부 목록 ─────────────────────────────────────────
+async function loadMembers() {
+  const data = await apiGet({ action:"getAllData", email:currentUser.email, period:activePeriod });
+  if (!data.ok) return;
+  allMembers = data.summary || [];
+  buildDeptTabs();
+  renderMemberTable();
+}
+
+function buildDeptTabs() {
+  const depts = ['all', ...new Set(allMembers.map(m=>m.dept||"미지정"))];
+  document.getElementById("dept-tabs").innerHTML = depts.map(d=>`
+    <button class="dept-tab ${d===activeDept?'active':''}" onclick="selectDept('${d}',this)">${d==='all'?'전체':d}</button>`).join('');
+}
+
+function selectDept(dept) {
+  activeDept = dept;
+  buildDeptTabs();
+  renderMemberTable();
+}
+
+function renderMemberTable() {
+  const filtered = allMembers.filter(m => {
+    const matchDept   = activeDept==='all' || (m.dept||"미지정")===activeDept;
+    const matchSearch = !searchQuery || m.name?.includes(searchQuery) || m.team?.includes(searchQuery);
+    const matchFilter =
+      filterStatus==='all' ||
+      (filterStatus==='submitted' && m.submitted) ||
+      (filterStatus==='pending'   && !m.submitted) ||
+      (filterStatus==='evaluated' && m.evaluated);
+    return matchDept && matchSearch && matchFilter;
+  });
+
+  document.getElementById("member-tbody").innerHTML = filtered.length ? filtered.map(m=>`
+    <tr onclick="openMemberDetail('${m.email}')">
+      <td><b>${m.name||'—'}</b></td>
+      <td style="font-size:12px;color:var(--text2)">${m.dept||'—'}<br><span style="color:var(--text3)">${m.team||'—'}</span></td>
+      <td><span class="badge badge-${m.rank==='AM'?'accent':'gray'}">${m.rank||'—'}</span></td>
+      <td>${m.submitted?'<span class="badge badge-green">제출완료</span>':'<span class="badge badge-amber">미제출</span>'}</td>
+      <td>${m.evaluated?'<span class="badge badge-accent">평가완료</span>':(m.submitted?'<span class="badge badge-amber">평가필요</span>':'<span class="badge badge-gray">대기중</span>')}</td>
+      <td>${m.grade?`<span class="grade-chip grade-${m.grade}">${m.grade}</span>`:'<span class="grade-chip grade-none">—</span>'}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-outline btn-sm" onclick="openEditMemberModal('${m.email}')">수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deactivateMember('${m.email}','${m.name}')">비활성화</button>
+        </div>
+      </td>
+    </tr>`).join('')
+  : `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">해당하는 팀원이 없어요</td></tr>`;
+}
+
+// ── 사업부 카드 클릭 → 해당 사업부 필터로 목록 이동 ──────
+async function goToDept(dept) {
+  activeDept = dept;
+  await loadMembers();
+  showSection('members', document.querySelector('.nav-item[onclick*="members"]'));
+}
+
+function filterMembers(val) { searchQuery=val; renderMemberTable(); }
+function setFilter(f,btn) {
+  filterStatus=f;
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
+  renderMemberTable();
+}
+
+// ── 팀원 상세 ─────────────────────────────────────────
+async function openMemberDetail(email) {
+  prevSection = document.querySelector(".section.active")?.id?.replace("section-","") || "members";
+  currentDetailEmail = email;
+  showLoading(true);
+  const data = await apiGet({ action:"getEvalDetail", member_email:email, email:currentUser.email, period:activePeriod });
+  showLoading(false);
+  if (!data.ok) { showNotif("로드 실패: "+data.error); return; }
+
+  const m   = data.member || {};
+  const pf  = data.portfolio || [];
+  const sk  = data.skills || [];
+  const ev  = data.evaluation || null;
+
+  document.getElementById("detail-back-btn").textContent = `← ${prevSection==='dashboard'?'대시보드':'사업부 목록'}으로`;
+
+  document.getElementById("detail-content").innerHTML = `
+    <div class="profile-card">
+      <div class="profile-left">
+        <div class="profile-av">${m.name?.[0]||'?'}</div>
+        <div>
+          <div class="profile-name">${m.name||'—'}</div>
+          <div class="profile-tags">
+            <span class="badge badge-gray">${m.dept||'—'}</span>
+            <span class="badge badge-gray">${m.team||'—'}</span>
+            <span class="badge badge-${m.rank==='AM'?'accent':'gray'}">${m.rank||'—'}</span>
+            <span class="badge badge-gray">${m.job||'—'}</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <span class="badge badge-gray">입사 ${formatDate(m.joined)}</span>
+        <span class="badge badge-gray">role: ${m.role||'—'}</span>
+        ${pf.length?`<span class="badge badge-green">작업물 ${pf.length}건</span>`:'<span class="badge badge-amber">반기 미제출</span>'}
+      </div>
+    </div>
+
+    <div class="detail-tabs">
+      <button class="detail-tab active" onclick="switchDetailTab('pf',this)">📁 포트폴리오 (${pf.length}건)</button>
+      <button class="detail-tab" onclick="switchDetailTab('skill',this)">🛠 툴 스킬 (${sk.length}건)</button>
+      <button class="detail-tab" onclick="switchDetailTab('eval',this)">✦ 평가 결과</button>
+    </div>
+
+    <div id="dt-pf">
+      ${pf.length ? pf.map(item=>renderPfItem(item)).join('') : '<div class="empty-state"><div class="empty-icon">📭</div>제출된 포트폴리오가 없어요</div>'}
+    </div>
+    <div id="dt-skill" style="display:none">
+      ${sk.length ? `<div class="card"><div class="card-body" style="padding:0 18px">${sk.map(s=>`
+        <div class="skill-item">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${s.tool_name} <span style="font-size:11px;color:var(--text3);font-weight:400">${s.tool_type}</span></div>${s.experience?`<div style="font-size:11px;color:var(--text3)">${s.experience}</div>`:''}</div>
+          <span class="lv ${lvMap[s.level]||'lv1'}">${s.level||'미기재'}</span>
+        </div>`).join('')}</div></div>` : '<div class="empty-state"><div class="empty-icon">🛠</div>등록된 툴이 없어요</div>'}
+    </div>
+    <div id="dt-eval" style="display:none">
+      ${ev ? `
+      <div class="eval-result">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div><div class="eval-grade-big">${ev.portfolio_grade}</div><div class="eval-grade-lbl">${gradeLabels[ev.portfolio_grade]||''}</div></div>
+          <span class="badge badge-green">평가완료</span>
+        </div>
+        ${ev.portfolio_comment?`<div class="eval-comment-txt">${ev.portfolio_comment}</div>`:''}
+      </div>
+      <div class="card"><div class="card-hd"><span class="card-title">툴 숙련도 피드백</span></div>
+        <div class="card-body"><span class="badge ${ev.tool_issue==='TRUE'||ev.tool_issue===true?'badge-amber':'badge-green'}">${ev.tool_issue==='TRUE'||ev.tool_issue===true?'이상 있음':'이상 없음'}</span>${ev.tool_comment?`<div style="margin-top:8px;font-size:13px;color:var(--text2)">${ev.tool_comment}</div>`:''}</div>
+      </div>` : '<div class="empty-state"><div class="empty-icon">⏳</div>아직 리더 평가가 완료되지 않았어요</div>'}
+    </div>`;
+
+  showSection('detail', null);
+}
+
+function renderPfItem(item) {
+  const done = item.is_submitted===true||item.is_submitted==="TRUE";
+  const sp = item.status==="완료"
+    ? `<span class="pf-status-pill" style="background:var(--green-light);color:var(--green)">완료</span>`
+    : `<span class="pf-status-pill" style="background:var(--amber-light);color:var(--amber)">진행중</span>`;
+  const cc = getContribColor(item.contribution_pct);
+  const assets = (() => { try { return JSON.parse(item.asset_url||"[]"); } catch(e) { return item.asset_url?[{type:item.asset_type||"link",url:item.asset_url}]:[]; } })();
+  return `
+  <div class="pf-item">
+    <div class="pf-item-hd" onclick="this.nextElementSibling.classList.toggle('open')">
+      ${sp}
+      ${!done?`<span style="font-size:10px;font-weight:600;background:var(--surface2);color:var(--text3);padding:3px 9px;border-radius:20px;border:1px solid var(--border);flex-shrink:0">반기 미제출</span>`:''}
+      <div class="pf-item-info">
+        <div class="pf-item-title">${item.client||''} ${item.channel||''} · ${item.work_title||''}</div>
+        <div class="pf-item-meta">
+          <span>${formatDate(item.date_start)} ~ ${formatDate(item.date_end)}</span>
+          <span class="contrib-pill" style="background:${cc.bg};color:${cc.color}">기여율 ${item.contribution_pct||0}%</span>
+          ${item.collaborator?`<span>협업: ${item.collaborator}</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        ${done
+          ? `<span style="font-size:11px;font-weight:600;color:var(--green)">제출완료</span>
+             <button class="btn btn-outline btn-sm" style="font-size:11px;color:var(--amber);border-color:var(--amber)"
+               onclick="event.stopPropagation();unlockItem('${item.id}','${(item.work_title||'').replace(/'/g,'')}')"
+               title="팀원이 이 작업물을 다시 수정할 수 있도록 잠금을 해제합니다">
+               🔓 잠금 해제
+             </button>`
+          : ''}
+        <span style="font-size:11px;color:var(--text3)">▾</span>
+      </div>
+    </div>
+    <div class="pf-item-body">
+      <div class="pf-body-grid">
+        <div class="pf-field"><div class="pf-fl">디자인 툴</div><div class="pf-fv">${item.tools_design||'—'}</div></div>
+        <div class="pf-field"><div class="pf-fl">AI 활용</div><div class="pf-fv">${item.ai_usage||'—'}${item.ai_tools?` · ${item.ai_tools}`:''}${item.ai_detail?`<div style="font-size:12px;color:var(--text2);margin-top:3px">${item.ai_detail}</div>`:''}</div></div>
+      </div>
+      ${item.work_desc?`<div class="pf-txt">${item.work_desc}</div>`:''}
+      ${assets.length?`<div class="assets-wrap"><div class="assets-title">첨부 작업물</div><div class="assets-grid">${assets.map(a=>renderAsset(a)).join('')}</div></div>`:''}
+      ${(item.tip_consider||item.tip_develop||item.tip_quality)?`
+      <div class="pf-tip-wrap">
+        <div class="pf-tip-hd">✦ 작성 TIP</div>
+        ${item.tip_consider?`<div class="pf-tip-item"><div class="pf-tip-lbl">고려한 포인트</div><div class="pf-tip-txt">${item.tip_consider}</div></div>`:''}
+        ${item.tip_develop?`<div class="pf-tip-item"><div class="pf-tip-lbl">발전 포인트</div><div class="pf-tip-txt">${item.tip_develop}</div></div>`:''}
+        ${item.tip_quality?`<div class="pf-tip-item"><div class="pf-tip-lbl">완성도 & 개선</div><div class="pf-tip-txt">${item.tip_quality}</div></div>`:''}
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderAsset(a) {
+  if (!a?.url) return '';
+  const isDrive = a.url.includes("drive.google.com");
+  const isYT    = a.url.includes("youtube.com")||a.url.includes("youtu.be");
+  const icon    = isDrive?"📁":isYT?"▶️":"🔗";
+  let thumbHtml = '';
+  if (a.thumbUrl?.trim()) {
+    thumbHtml=`<div class="asset-thumb-wrap"><img class="asset-thumb" src="${a.thumbUrl}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'asset-thumb-ph\\'>${icon}</div>'"></div>`;
+  } else if (isYT) {
+    const m=a.url.match(/(?:v=|youtu\.be\/|shorts\/)([^?&]+)/);
+    thumbHtml=m?`<div class="asset-thumb-wrap"><img class="asset-thumb" src="https://img.youtube.com/vi/${m[1]}/hqdefault.jpg" loading="lazy"></div>`:`<div class="asset-thumb-wrap"><div class="asset-thumb-ph">▶️</div></div>`;
+  } else if (isDrive) {
+    const m=a.url.match(/[-\w]{25,}/);
+    thumbHtml=m?`<div class="asset-thumb-wrap"><img class="asset-thumb" src="https://drive.google.com/thumbnail?id=${m[0]}&sz=w400" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'asset-thumb-ph\\'>📁</div>'"></div>`:`<div class="asset-thumb-wrap"><div class="asset-thumb-ph">📁</div></div>`;
+  } else {
+    thumbHtml=`<div class="asset-thumb-wrap"><div class="asset-thumb-ph">${icon}</div></div>`;
+  }
+  const short = a.url.length>40?a.url.substring(0,40)+"…":a.url;
+  return `<div class="asset-item" onclick="window.open('${a.url}','_blank')">${thumbHtml}<div class="asset-info"><div class="asset-type-lbl">${isDrive?"Drive":isYT?"YouTube":"링크"}</div><div class="asset-url-txt" title="${a.url}">${short}</div></div></div>`;
+}
+
+function switchDetailTab(id,btn) {
+  ['pf','skill','eval'].forEach(t=>{ document.getElementById("dt-"+t).style.display=t===id?"block":"none"; });
+  document.querySelectorAll(".detail-tab").forEach(t=>t.classList.remove("active")); btn?.classList.add("active");
+}
+
+// ── 팀원 추가/수정 ────────────────────────────────────
+function openAddMemberModal() {
+  editingEmail = null;
+  document.getElementById("modal-title").textContent = "팀원 추가";
+  document.getElementById("modal-save-btn").textContent = "추가";
+  ["m-email","m-name","m-dept","m-team","m-rank","m-job","m-leader-email","m-dept-scope"].forEach(id=>{ document.getElementById(id).value=""; });
+  document.getElementById("m-joined").value="";
+  document.getElementById("m-role").value="member";
+  document.getElementById("m-email").disabled=false;
+  document.getElementById("modal-err").style.display="none";
+  document.getElementById("member-modal").classList.add("show");
+}
+
+async function openEditMemberModal(email) {
+  const data = await apiGet({ action:"getUser", email });
+  if (!data.ok) { showNotif("로드 실패: "+data.error); return; }
+  editingEmail = email;
+  const m = data.user;
+  document.getElementById("modal-title").textContent = "팀원 수정";
+  document.getElementById("modal-save-btn").textContent = "저장";
+  document.getElementById("m-email").value = m.email||"";
+  document.getElementById("m-email").disabled = true;
+  document.getElementById("m-name").value = m.name||"";
+  document.getElementById("m-dept").value = m.dept||"";
+  document.getElementById("m-team").value = m.team||"";
+  document.getElementById("m-rank").value = m.rank||"";
+  document.getElementById("m-job").value  = m.job||"";
+  document.getElementById("m-joined").value = m.joined ? String(m.joined).substring(0,10) : "";
+  document.getElementById("m-role").value = m.role||"member";
+  document.getElementById("m-leader-email").value = m.leader_email||"";
+  document.getElementById("m-dept-scope").value = m.dept_scope||"";
+  document.getElementById("modal-err").style.display="none";
+  document.getElementById("member-modal").classList.add("show");
+}
+
+async function saveMember() {
+  const email = document.getElementById("m-email").value.trim();
+  const name  = document.getElementById("m-name").value.trim();
+  if (!email||!name) {
+    const errEl = document.getElementById("modal-err");
+    errEl.textContent="이메일과 이름은 필수입니다."; errEl.style.display="block"; return;
+  }
+
+  const body = {
+    email, name,
+    dept:         document.getElementById("m-dept").value.trim(),
+    team:         document.getElementById("m-team").value.trim(),
+    rank:         document.getElementById("m-rank").value.trim(),
+    job:          document.getElementById("m-job").value.trim(),
+    joined:       document.getElementById("m-joined").value,
+    role:         document.getElementById("m-role").value,
+    leader_email: document.getElementById("m-leader-email").value.trim(),
+    dept_scope:   document.getElementById("m-dept-scope").value.trim(),
+  };
+
+  let data;
+  if (editingEmail) {
+    data = await apiPost({ action:"updateMember", hr_email:currentUser.email, ...body });
+  } else {
+    data = await apiPost({ action:"addMember", hr_email:currentUser.email, ...body });
+  }
+
+  if (data.ok) {
+    showNotif(editingEmail?"수정되었습니다":"팀원이 추가되었습니다");
+    closeModal();
+    await loadMembers();
+  } else {
+    const errEl = document.getElementById("modal-err");
+    errEl.textContent=data.error; errEl.style.display="block";
+  }
+}
+
+async function deactivateMember(email, name) {
+  if (!confirm(`${name}을(를) 비활성화하시겠어요?\n로그인이 차단되며 데이터는 보존됩니다.`)) return;
+  const data = await apiPost({ action:"deactivateMember", hr_email:currentUser.email, email });
+  if (data.ok) { showNotif(`${name} 비활성화되었습니다`); await loadMembers(); }
+  else showNotif("실패: "+data.error);
+}
+
+function closeModal() { document.getElementById("member-modal").classList.remove("show"); }
+
+// ── 엑셀 내보내기 ─────────────────────────────────────
+// ── 잠금 해제 ─────────────────────────────────────────
+async function unlockItem(id, title) {
+  if (!confirm(`"${title}" 작업물의 잠금을 해제하시겠어요?\n팀원이 다시 수정할 수 있게 됩니다.`)) return;
+  const data = await apiPost({
+    action: "unlockPortfolioItem",
+    hr_email: currentUser.email,
+    id
+  });
+  if (data.ok) {
+    showNotif("잠금이 해제되었습니다. 팀원이 다시 수정할 수 있어요.");
+    // 현재 열려있는 팀원 상세 새로고침
+    if (currentDetailEmail) await openMemberDetail(currentDetailEmail);
+  } else {
+    showNotif("해제 실패: " + data.error);
+  }
+}
+
+function exportExcel() {
+  const headers = ["이름","본부","팀","직책","직무","포트폴리오 제출","평가 완료","등급","평가 코멘트"];
+  const rows = allMembers.map(m => [
+    m.name||"", m.dept||"", m.team||"", m.rank||"", m.job||"",
+    m.submitted?"제출완료":"미제출",
+    m.evaluated?"완료":"미완료",
+    m.grade||"—",
+    m.eval_comment||""
+  ]);
+
+  let csv = "\uFEFF" + headers.join(",") + "\n";
+  rows.forEach(r => { csv += r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",") + "\n"; });
+
+  const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  a.download = `포트폴리오_현황_${activePeriod}_${new Date().toLocaleDateString("ko-KR").replace(/\. /g,"-").replace(".","")}`.replace(/\s/g,"") + ".csv";
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotif("엑셀 파일이 다운로드됩니다");
+}
+
+// ── 유틸 ──────────────────────────────────────────────
+function getContribColor(pct) {
+  const n=parseInt(pct)||0;
+  if(n===100) return {bg:"#E6F7F0",color:"#12A76A"};
+  if(n>=70)   return {bg:"#EEF0FE",color:"#5B6BF5"};
+  if(n>=40)   return {bg:"#FEF3E2",color:"#E07B00"};
+  return             {bg:"#F0F1F6",color:"#565A70"};
+}
+function formatDate(d) {
+  if (!d) return "—";
+  const s = String(d);
+  if (s.includes("T")||s.includes("GMT")) {
+    const dt=new Date(d);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  }
+  return s.substring(0,10);
+}
+
+function showSection(id, btn) {
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  document.getElementById("section-"+id).classList.add("active");
+  if (btn) btn.classList.add("active");
+  if (id==="dashboard") loadDashboard();
+  else if (id==="members") loadMembers();
+}
+
+function goBack() {
+  showSection(prevSection, document.querySelector(`.nav-item[onclick*="${prevSection}"]`));
+}
+
+function showLoading(show){document.getElementById("loading-overlay").style.display=show?"flex":"none";}
+function showNotif(msg){const n=document.getElementById("notif");n.textContent=msg;n.classList.add("show");setTimeout(()=>n.classList.remove("show"),2400);}
+</script>
+</body>
+</html>
