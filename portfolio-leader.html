@@ -81,7 +81,11 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
 .stat-sub{font-size:11px;color:var(--text3);margin-top:2px;}
 
 /* ── 팀원 테이블 ── */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);}
+.team-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.team-tab{padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;background:var(--surface);transition:all .15s;font-family:'Pretendard',sans-serif;}
+.team-tab:hover{border-color:var(--accent);color:var(--accent);}
+.team-tab.active{background:var(--accent-grad);color:#fff;border-color:transparent;}
+border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);}
 .table-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
 .table-toolbar-left{display:flex;align-items:center;gap:8px;}
 .search-wrap{position:relative;}
@@ -330,6 +334,9 @@ select.f-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg x
             <button class="add-period-btn" onclick="addPeriod()">＋ 반기 추가</button>
           </div>
 
+          <!-- 팀 탭 -->
+          <div class="team-tabs" id="team-tabs"></div>
+
           <div class="stats-row" id="stats-row">
             <div class="stat-card"><div class="stat-label">전체 인원</div><div class="stat-num" id="st-total">—</div></div>
             <div class="stat-card"><div class="stat-label">포트폴리오 제출</div><div class="stat-num" style="color:var(--green)" id="st-submitted">—</div></div>
@@ -411,6 +418,7 @@ let currentUser = null;
 let memberList  = [];
 let filterStatus = 'all';
 let searchQuery  = '';
+let activeTeam   = 'all';
 let currentMemberEmail = null;
 let selectedGrade = null;
 let periods = ["26년도 상반기", "26년도 하반기"];
@@ -511,15 +519,32 @@ async function loadMemberList() {
   if (!data.ok) { showNotif("데이터 로드 실패: " + data.error); return; }
   memberList = data.list || [];
   document.getElementById("nav-ct").textContent = memberList.length;
+  renderTeamTabs();
+  renderStats();
+  renderTable();
+}
+
+function renderTeamTabs() {
+  const teams = ['all', ...new Set(memberList.map(m => m.team || "미지정").filter(Boolean))];
+  const wrap = document.getElementById("team-tabs");
+  if (!wrap) return;
+  wrap.innerHTML = teams.map(t => `
+    <button class="team-tab ${t === activeTeam ? 'active' : ''}" onclick="selectTeam('${t}')">${t === 'all' ? '전체 팀' : t}</button>`).join('');
+}
+
+function selectTeam(team) {
+  activeTeam = team;
+  renderTeamTabs();
   renderStats();
   renderTable();
 }
 
 function renderStats() {
-  const total     = memberList.length;
-  const submitted = memberList.filter(m => m.submitted).length;
-  const evaluated = memberList.filter(m => m.evaluated).length;
-  const pending   = memberList.filter(m => !m.submitted).length;
+  const filtered = activeTeam === 'all' ? memberList : memberList.filter(m => (m.team||"미지정") === activeTeam);
+  const total     = filtered.length;
+  const submitted = filtered.filter(m => m.submitted).length;
+  const evaluated = filtered.filter(m => m.evaluated).length;
+  const pending   = filtered.filter(m => !m.submitted).length;
   document.getElementById("st-total").textContent     = total;
   document.getElementById("st-submitted").textContent = submitted;
   document.getElementById("st-evaluated").textContent = evaluated;
@@ -528,13 +553,14 @@ function renderStats() {
 
 function renderTable() {
   const filtered = memberList.filter(m => {
+    const matchTeam   = activeTeam === 'all' || (m.team || "미지정") === activeTeam;
     const matchSearch = !searchQuery || m.name.includes(searchQuery) || (m.team||"").includes(searchQuery);
     const matchFilter =
       filterStatus === 'all' ||
       (filterStatus === 'submitted'   && m.submitted) ||
       (filterStatus === 'pending'     && !m.submitted) ||
       (filterStatus === 'unevaluated' && m.submitted && !m.evaluated);
-    return matchSearch && matchFilter;
+    return matchTeam && matchSearch && matchFilter;
   });
 
   document.getElementById("member-tbody").innerHTML = filtered.map(m => `
@@ -556,7 +582,7 @@ function renderTable() {
       <td>
         ${m.submitted
           ? `<button class="btn btn-accent btn-sm" onclick="event.stopPropagation();openMember('${m.email}')">${m.evaluated ? '평가 보기' : '평가 작성'}</button>`
-          : `<button class="btn btn-outline btn-sm" disabled>미제출</button>`}
+          : `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openMember('${m.email}')">포트폴리오 보기</button>`}
       </td>
     </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">해당하는 팀원이 없어요</td></tr>`;
 }
