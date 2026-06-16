@@ -249,6 +249,10 @@ input[type=range] { flex: 1; height: 3px; accent-color: var(--accent); cursor: p
 
 /* ── 로딩 ── */
 .loading-overlay { position: fixed; inset: 0; background: rgba(244,245,249,.9); display: flex; align-items: center; justify-content: center; z-index: 999; font-size: 13px; color: var(--text3); gap: 10px; backdrop-filter: blur(4px); }
+.saving-overlay{position:fixed;inset:0;background:rgba(244,245,249,.75);display:none;align-items:center;justify-content:center;z-index:998;backdrop-filter:blur(3px);}
+.saving-overlay.show{display:flex;}
+.saving-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 30px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-md);}
+.saving-text{font-size:14px;font-weight:500;color:var(--text2);}
 .spinner { width: 20px; height: 20px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -285,6 +289,12 @@ input[type=range] { flex: 1; height: 3px; accent-color: var(--accent); cursor: p
 <body>
 
 <div class="loading-overlay" id="loading-overlay"><div class="spinner"></div>불러오는 중...</div>
+<div class="saving-overlay" id="saving-overlay">
+  <div class="saving-box">
+    <div class="spinner" style="border-top-color:var(--accent);border-color:var(--border2)"></div>
+    <span class="saving-text" id="saving-text">저장 중...</span>
+  </div>
+</div>
 
 <!-- 로그인 -->
 <div class="login-wrap" id="login-screen" style="display:none">
@@ -1065,10 +1075,14 @@ async function saveItem() {
   let valid=true;
   req.forEach(r=>{const el=document.getElementById(r.id);if(!el.value.trim()){el.classList.add("err");valid=false;}else el.classList.remove("err");});
   if(!valid){showNotif("필수 항목을 모두 입력해주세요");return;}
-  const btn=document.getElementById("save-btn"); btn.disabled=true; btn.innerHTML='<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span>';
+
+  const btn=document.getElementById("save-btn");
+  btn.disabled=true;
+  btn.innerHTML='<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span>';
+  showSavingOverlay("기본 정보 저장 중...");
+
   const assets=assetFields.filter(a=>a&&a.url.trim()).map(a=>({type:a.type,url:a.url.trim(),thumbUrl:a.thumbUrl||""}));
 
-  // 1차 요청: 기본 정보 저장 (텍스트 필드 제외)
   const body1={action:"savePortfolioItem",member_email:currentUser.email,id:editingId||"",
     period:activePfPeriod,
     client:document.getElementById("f-client").value.trim(),channel:document.getElementById("f-channel").value,
@@ -1081,11 +1095,11 @@ async function saveItem() {
 
   const data1 = await apiGet(body1);
   if (!data1.ok) {
+    hideSavingOverlay();
     btn.disabled=false; btn.textContent="저장";
     showNotif("저장 실패: "+data1.error); return;
   }
 
-  // 2차 요청: 긴 텍스트 필드 별도 저장
   const itemId = data1.id || editingId;
   const desc = document.getElementById("f-desc").value.trim();
   const tip1 = document.getElementById("f-tip1").value.trim();
@@ -1093,12 +1107,39 @@ async function saveItem() {
   const tip3 = document.getElementById("f-tip3").value.trim();
 
   if (itemId && (desc || tip1 || tip2 || tip3)) {
-    const body2 = {action:"savePortfolioItem",member_email:currentUser.email,id:itemId,
-      period:activePfPeriod,
-      work_desc:desc,tip_consider:tip1,tip_develop:tip2,tip_quality:tip3};
-    await apiGet(body2);
+    showSavingOverlay("작성 내용 저장 중...");
+    // 각 필드를 개별 요청으로 분리해서 URL 길이 문제 방지
+    const textFields = [
+      { field: "work_desc",    value: desc },
+      { field: "tip_consider", value: tip1 },
+      { field: "tip_develop",  value: tip2 },
+      { field: "tip_quality",  value: tip3 },
+    ].filter(f => f.value);
+
+    for (const tf of textFields) {
+      try {
+        const params = new URLSearchParams({
+          action: "updateTextField",
+          id: itemId,
+          field: tf.field,
+          value: tf.value
+        });
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6000);
+        try {
+          await fetch(API + "?" + params, { redirect: "follow", signal: controller.signal });
+        } catch(fetchErr) {
+          console.warn(`${tf.field} 저장 응답 없음:`, fetchErr.message);
+        } finally {
+          clearTimeout(timeout);
+        }
+      } catch(e) {
+        console.warn(`${tf.field} 저장 실패:`, e);
+      }
+    }
   }
 
+  hideSavingOverlay();
   btn.disabled=false; btn.textContent="저장";
   showNotif(editingId?"수정되었습니다":"저장되었습니다");
   closeForm();
@@ -1206,6 +1247,13 @@ function resetCounters() {
     const cntEl = document.getElementById(cid);
     if (el && cntEl) { cntEl.textContent = el.value.length; cntEl.style.color = "var(--text3)"; }
   });
+}
+function showSavingOverlay(msg) {
+  document.getElementById("saving-text").textContent = msg || "저장 중...";
+  document.getElementById("saving-overlay").classList.add("show");
+}
+function hideSavingOverlay() {
+  document.getElementById("saving-overlay").classList.remove("show");
 }
 function showLoading(show){document.getElementById("loading-overlay").style.display=show?"flex":"none";}
 function showNotif(msg){const n=document.getElementById("notif");n.textContent=msg;n.classList.add("show");setTimeout(()=>n.classList.remove("show"),2400);}
