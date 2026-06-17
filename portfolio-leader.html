@@ -207,6 +207,20 @@ tbody td{padding:12px 16px;font-size:13px;vertical-align:middle;}
 .eval-guide-item:last-child{margin-bottom:0;}
 .eval-guide-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:7px;}
 .tool-guide{background:rgba(255,255,255,.6);border:1px solid #D4D8FA;border-radius:var(--r-sm);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.6;}
+.tool-eval-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;}
+.tool-eval-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.tool-eval-name{font-size:13px;font-weight:600;}
+.tool-eval-type{font-size:11px;color:var(--text3);font-weight:400;margin-left:5px;}
+.tool-eval-original{font-size:11px;color:var(--text3);}
+.tool-level-opts{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.tool-level-opt{padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;background:var(--surface);transition:all .15s;font-family:'Pretendard',sans-serif;}
+.tool-level-opt:hover{border-color:var(--accent);color:var(--accent);}
+.tool-level-opt.on{background:var(--accent-grad);color:#fff;border-color:transparent;}
+.tool-note-input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;font-size:12px;font-family:'Pretendard',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+.tool-note-input:focus{border-color:var(--accent);}
+.tool-note-input::placeholder{color:var(--text3);}
+.special-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--amber-light);color:var(--amber);}
+
 
 .eval-panel-hd{padding:14px 18px;border-bottom:1px solid #C7CDFB;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:space-between;}
 .eval-panel-title{font-size:13px;font-weight:700;color:var(--accent);}
@@ -421,6 +435,7 @@ let searchQuery  = '';
 let activeTeam   = 'all';
 let currentMemberEmail = null;
 let selectedGrade = null;
+let toolEvalData = []; // 툴별 평가 데이터
 let periods = ["26년도 상반기", "26년도 하반기"];
 let activePeriod = "26년도 상반기";
 
@@ -429,9 +444,19 @@ async function apiGet(params) {
   return res.json();
 }
 async function apiPost(body) {
-  const url = API + "?" + new URLSearchParams(body);
-  const res = await fetch(url, { redirect: "follow" });
-  return res.json();
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      redirect: "follow",
+    });
+    return res.json();
+  } catch(e) {
+    const url = API + "?" + new URLSearchParams(body);
+    const res = await fetch(url, { redirect: "follow" });
+    return res.json();
+  }
 }
 
 // ── 초기화 ────────────────────────────────────────────
@@ -609,6 +634,19 @@ async function openMember(email) {
   const ev  = data.evaluation || null;
   selectedGrade = ev?.portfolio_grade || null;
 
+  // 툴별 평가 데이터 초기화
+  toolEvalData = sk.map((s, idx) => {
+    const saved = ev?.tool_eval ? (() => { try { return JSON.parse(ev.tool_eval); } catch(e) { return []; } })().find(t => t.tool_name === s.tool_name) : null;
+    return {
+      idx,
+      tool_name: s.tool_name,
+      tool_type: s.tool_type,
+      original_level: s.level,
+      leader_level: saved?.leader_level || "",
+      note: saved?.note || ""
+    };
+  });
+
   document.getElementById("detail-content").innerHTML = `
     <!-- 프로필 -->
     <div class="profile-card">
@@ -728,24 +766,44 @@ async function openMember(email) {
           <div class="form-div"></div>
           <div class="form-sec-lbl">툴 숙련도 점검</div>
           <div class="tool-guide">
-            각 구성원이 작성한 항목이 실제 업무 수행 역량과 부합하는지, 리더의 시각에서 보유한 툴 스킬 및 실무 활용 수준을 함께 확인해주시기 바랍니다.<br>
-            <span style="color:var(--amber);font-weight:600">⭐</span> 개인이 확인한 툴 숙련도에서 이상이 있을 경우에만 해당 항목의 코멘트를 작성해주세요.
+            각 구성원이 작성한 툴 목록을 확인하고, 리더 시각에서 실제 수준을 평가해주세요.<br>
+            <span style="color:var(--amber);font-weight:600">⭐</span> 현재 직무와 다른 역량(모션, 3D 등)이 있다면 특이사항에 꼭 기재해주세요.
           </div>
-          <div class="form-row">
-            <div class="radio-row">
-              <label class="radio-opt">
-                <input type="radio" name="tool-issue" value="false" ${(!ev||ev.tool_issue==='FALSE'||ev.tool_issue===false)?'checked':''}>
-                <span>이상 없음</span>
-              </label>
-              <label class="radio-opt">
-                <input type="radio" name="tool-issue" value="true" ${(ev?.tool_issue==='TRUE'||ev?.tool_issue===true)?'checked':''}>
-                <span>이상 있음</span>
-              </label>
-            </div>
-          </div>
-          <div class="form-row">
-            <textarea class="f-input" id="eval-tool-comment" placeholder="이상 있을 경우 구체적인 코멘트..." style="min-height:56px">${ev?.tool_comment||''}</textarea>
-          </div>
+
+          ${sk.length ? `
+          <div id="tool-eval-list">
+            ${sk.map((s, idx) => {
+              const saved = ev?.tool_eval ? JSON.parse(ev.tool_eval || '[]').find(t => t.tool_name === s.tool_name) : null;
+              const levels = ['기초 경험','기본 활용','실무 활용','고급 응용','전문가 리드'];
+              return `
+              <div class="tool-eval-item" id="tool-item-${idx}">
+                <div class="tool-eval-header">
+                  <div>
+                    <span class="tool-eval-name">${s.tool_name}</span>
+                    <span class="tool-eval-type">${s.tool_type}</span>
+                    ${s.tool_type !== '디자인툴' && s.tool_type !== 'AI' ? `<span class="special-badge">특이역량</span>` : ''}
+                  </div>
+                  <div class="tool-eval-original">본인 기재: <span class="lv ${lvMap[s.level]||'lv1'}" style="font-size:10px;padding:2px 7px">${s.level||'미기재'}</span></div>
+                </div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:5px">리더 평가 수준</div>
+                <div class="tool-level-opts">
+                  ${levels.map(lv => `
+                    <div class="tool-level-opt ${saved?.leader_level === lv ? 'on' : ''}"
+                      onclick="selectToolLevel(this, ${idx})">${lv}</div>`).join('')}
+                  <div class="tool-level-opt ${saved?.leader_level === '확인불가' ? 'on' : ''}"
+                    onclick="selectToolLevel(this, ${idx})">확인불가</div>
+                </div>
+                <input class="tool-note-input" type="text"
+                  placeholder="특이사항 (예: 현 직무 외 모션 가능, 3D 백업 가능 등)"
+                  value="${saved?.note || ''}"
+                  oninput="updateToolNote(this, ${idx})">
+              </div>`;
+            }).join('')}
+          </div>` : `
+          <div style="padding:14px;background:var(--surface2);border-radius:var(--r-sm);font-size:13px;color:var(--text3);text-align:center">
+            등록된 툴 스킬이 없습니다
+          </div>`}
+
           <div class="btn-row">
             <button class="btn btn-outline" onclick="goBack()">취소</button>
             <button class="btn btn-accent" onclick="saveEval('${email}')">평가 저장</button>
@@ -842,26 +900,49 @@ function selectGrade(el, g) {
   selectedGrade = g;
 }
 
+function selectToolLevel(el, idx) {
+  el.closest(".tool-eval-item").querySelectorAll(".tool-level-opt").forEach(o => o.classList.remove("on"));
+  el.classList.add("on");
+  if (toolEvalData[idx]) toolEvalData[idx].leader_level = el.textContent.trim();
+}
+
+function updateToolNote(el, idx) {
+  if (toolEvalData[idx]) toolEvalData[idx].note = el.value;
+}
+
 async function saveEval(memberEmail) {
   if (!selectedGrade) { showNotif("등급을 선택해주세요"); return; }
-  const comment    = document.getElementById("eval-comment")?.value||"";
-  const toolIssue  = document.querySelector("input[name='tool-issue']:checked")?.value === "true";
-  const toolComment= document.getElementById("eval-tool-comment")?.value||"";
+  const comment = document.getElementById("eval-comment")?.value || "";
+
+  // 툴별 평가 JSON 직렬화
+  const toolEvalJson = JSON.stringify(toolEvalData.map(t => ({
+    tool_name:      t.tool_name,
+    tool_type:      t.tool_type,
+    original_level: t.original_level,
+    leader_level:   t.leader_level,
+    note:           t.note
+  })));
+
+  // 특이사항 여부 자동 감지 (note 작성된 경우)
+  const hasSpecial  = toolEvalData.some(t => t.note && t.note.trim() !== "");
+  const toolComment = toolEvalData.filter(t => t.note && t.note.trim())
+                                   .map(t => `${t.tool_name}: ${t.note}`)
+                                   .join(" / ");
 
   const data = await apiPost({
-    action:"saveEvaluation",
-    leader_email: currentUser.email,
-    member_email: memberEmail,
-    period: activePeriod,
-    portfolio_grade: selectedGrade,
+    action:            "saveEvaluation",
+    leader_email:      currentUser.email,
+    member_email:      memberEmail,
+    period:            activePeriod,
+    portfolio_grade:   selectedGrade,
     portfolio_comment: comment,
-    tool_issue: toolIssue,
-    tool_comment: toolComment,
+    tool_issue:        hasSpecial,
+    tool_comment:      toolComment,
+    tool_eval:         toolEvalJson,
   });
 
   if (data.ok) {
     showNotif("평가가 저장되었습니다");
-    // 목록 갱신 후 표시
     await loadMemberList();
     await openMember(memberEmail);
   } else {
