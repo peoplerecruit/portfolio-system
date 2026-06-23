@@ -468,9 +468,19 @@ async function apiGet(params) {
   return res.json();
 }
 async function apiPost(body) {
-  const url = API + "?" + new URLSearchParams(body);
-  const res = await fetch(url, { redirect:"follow" });
-  return res.json();
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      redirect: "follow",
+    });
+    return res.json();
+  } catch(e) {
+    const url = API + "?" + new URLSearchParams(body);
+    const res = await fetch(url, { redirect:"follow" });
+    return res.json();
+  }
 }
 
 // ── 초기화 ──────────────────────────────────────────
@@ -846,14 +856,14 @@ function renderPfItem(item) {
         <div class="pf-field"><div class="pf-fl">디자인 툴</div><div class="pf-fv">${item.tools_design||'—'}</div></div>
         <div class="pf-field"><div class="pf-fl">AI 활용</div><div class="pf-fv">${item.ai_usage||'—'}${item.ai_tools?` · ${item.ai_tools}`:''}${item.ai_detail?`<div style="font-size:12px;color:var(--text2);margin-top:3px">${item.ai_detail}</div>`:''}</div></div>
       </div>
-      ${item.work_desc?`<div class="pf-txt">${item.work_desc}</div>`:''}
+      ${item.work_desc?`<div class="pf-txt">${nl2br(item.work_desc)}</div>`:''}
       ${assets.length?`<div class="assets-wrap"><div class="assets-title">첨부 작업물</div><div class="assets-grid">${assets.map(a=>renderAsset(a)).join('')}</div></div>`:''}
       ${(item.tip_consider||item.tip_develop||item.tip_quality)?`
       <div class="pf-tip-wrap">
         <div class="pf-tip-hd">✦ 작성 TIP</div>
-        ${item.tip_consider?`<div class="pf-tip-item"><div class="pf-tip-lbl">고려한 포인트</div><div class="pf-tip-txt">${item.tip_consider}</div></div>`:''}
-        ${item.tip_develop?`<div class="pf-tip-item"><div class="pf-tip-lbl">발전 포인트</div><div class="pf-tip-txt">${item.tip_develop}</div></div>`:''}
-        ${item.tip_quality?`<div class="pf-tip-item"><div class="pf-tip-lbl">완성도 & 개선</div><div class="pf-tip-txt">${item.tip_quality}</div></div>`:''}
+        ${item.tip_consider?`<div class="pf-tip-item"><div class="pf-tip-lbl">고려한 포인트</div><div class="pf-tip-txt">${nl2br(item.tip_consider)}</div></div>`:''}
+        ${item.tip_develop?`<div class="pf-tip-item"><div class="pf-tip-lbl">발전 포인트</div><div class="pf-tip-txt">${nl2br(item.tip_develop)}</div></div>`:''}
+        ${item.tip_quality?`<div class="pf-tip-item"><div class="pf-tip-lbl">완성도 & 개선</div><div class="pf-tip-txt">${nl2br(item.tip_quality)}</div></div>`:''}
       </div>`:''}
     </div>
   </div>`;
@@ -1038,6 +1048,7 @@ function goBack() {
   showSection(prevSection, document.querySelector(`.nav-item[onclick*="${prevSection}"]`));
 }
 
+function nl2br(str) { if(!str) return ''; return String(str).replace(/\n/g,'<br>'); }
 function showLoading(show){document.getElementById("loading-overlay").style.display=show?"flex":"none";}
 function showNotif(msg){const n=document.getElementById("notif");n.textContent=msg;n.classList.add("show");setTimeout(()=>n.classList.remove("show"),2400);}
 </script>
