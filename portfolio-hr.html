@@ -435,6 +435,9 @@ select.f-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg x
           <!-- 사업부 탭 -->
           <div class="dept-tabs" id="eval-dept-tabs"></div>
 
+          <!-- 등급 필터 -->
+          <div class="dept-tabs" id="eval-grade-tabs" style="margin-top:2px"></div>
+
           <div id="eval-results-grid"></div>
         </div>
 
@@ -554,7 +557,7 @@ let allMembers  = [];
 let summaryData = [];
 let filterStatus = 'all';
 let searchQuery  = '';
-let activeDept   = 'all';
+let activeDepts  = []; // 빈 배열 = 전체 (다중 선택 가능)
 let groupField   = 'dept';
 let evalAllMembers = [];
 let toolSearchTimer = null;
@@ -567,7 +570,8 @@ const JOB_GROUPS = [
   { key:'pd',      label:'PD',           match:(job)=>String(job||'').toUpperCase().includes('PD') },
   { key:'content', label:'콘텐츠디자이너', match:(job)=>['콘텐츠디자이너','아트디렉터','크리에이티브디렉터'].some(k=>String(job||'').includes(k)) },
 ];
-let evalActiveDept = 'all';
+let evalActiveDepts = []; // 빈 배열 = 전체 (다중 선택)
+let evalActiveGrades = []; // 빈 배열 = 등급 전체 (다중 선택)
 let periods = ["26년도 상반기","26년도 하반기"];
 let activePeriod = "26년도 상반기";
 let prevSection  = 'members';
@@ -810,14 +814,16 @@ async function loadMembers() {
 
 function buildDeptTabs() {
   const base = groupField==='job' ? allMembers.filter(m=>!EXCLUDED_JOBS.includes(m.job)) : allMembers;
-  const depts = ['all', ...new Set(base.map(m=>m[groupField]||"미지정"))];
-  document.getElementById("dept-tabs").innerHTML = depts.map(d=>`
-    <button class="dept-tab ${d===activeDept?'active':''}" onclick="selectDept('${d}',this)">${d==='all'?'전체':d}</button>`).join('');
+  const depts = [...new Set(base.map(m=>m[groupField]||"미지정"))];
+  document.getElementById("dept-tabs").innerHTML =
+    `<button class="dept-tab ${activeDepts.length===0?'active':''}" onclick="selectDept('all')">전체</button>` +
+    depts.map(d=>`
+    <button class="dept-tab ${activeDepts.includes(d)?'active':''}" onclick="selectDept('${d.replace(/'/g,"\\'")}')">${d}</button>`).join('');
 }
 
 function selectGroupField(field, btn) {
   groupField = field;
-  activeDept = 'all';
+  activeDepts = [];
   document.querySelectorAll(".group-btn").forEach(b=>b.classList.remove("active"));
   btn?.classList.add("active");
   buildDeptTabs();
@@ -825,7 +831,13 @@ function selectGroupField(field, btn) {
 }
 
 function selectDept(dept) {
-  activeDept = dept;
+  if (dept === 'all') {
+    activeDepts = [];
+  } else {
+    const i = activeDepts.indexOf(dept);
+    if (i >= 0) activeDepts.splice(i, 1);
+    else activeDepts.push(dept);
+  }
   buildDeptTabs();
   renderMemberTable();
 }
@@ -833,7 +845,7 @@ function selectDept(dept) {
 function renderMemberTable() {
   const base = groupField==='job' ? allMembers.filter(m=>!EXCLUDED_JOBS.includes(m.job)) : allMembers;
   const filtered = base.filter(m => {
-    const matchDept   = activeDept==='all' || (m[groupField]||"미지정")===activeDept;
+    const matchDept   = activeDepts.length===0 || activeDepts.includes(m[groupField]||"미지정");
     const matchSearch = !searchQuery || m.name?.includes(searchQuery) || m.team?.includes(searchQuery);
     const matchFilter =
       filterStatus==='all' ||
@@ -865,7 +877,7 @@ function renderMemberTable() {
 // ── 사업부 카드 클릭 → 해당 사업부 필터로 목록 이동 ──────
 async function goToDept(dept) {
   groupField = 'dept';
-  activeDept = dept;
+  activeDepts = [dept];
   await loadMembers();
   document.querySelectorAll(".group-btn").forEach(b=>b.classList.toggle("active", b.dataset.field==='dept'));
   showSection('members', document.querySelector('.nav-item[onclick*="members"]'));
@@ -887,25 +899,59 @@ async function loadEvalResults() {
   if (!data.ok) return;
   evalAllMembers = data.summary || [];
   buildEvalDeptTabs();
+  buildEvalGradeTabs();
   renderEvalStats();
   renderEvalResults();
 }
 
 function buildEvalDeptTabs() {
-  const depts = ['all', ...new Set(evalAllMembers.map(m=>m.dept||"미지정"))];
-  document.getElementById("eval-dept-tabs").innerHTML = depts.map(d=>`
-    <button class="dept-tab ${d===evalActiveDept?'active':''}" onclick="selectEvalDept('${d}',this)">${d==='all'?'전체':d}</button>`).join('');
+  const depts = [...new Set(evalAllMembers.map(m=>m.dept||"미지정"))];
+  document.getElementById("eval-dept-tabs").innerHTML =
+    `<button class="dept-tab ${evalActiveDepts.length===0?'active':''}" onclick="selectEvalDept('all')">전체</button>` +
+    depts.map(d=>`
+    <button class="dept-tab ${evalActiveDepts.includes(d)?'active':''}" onclick="selectEvalDept('${d.replace(/'/g,"\\'")}')">${d}</button>`).join('');
 }
 
 function selectEvalDept(dept) {
-  evalActiveDept = dept;
+  if (dept === 'all') {
+    evalActiveDepts = [];
+  } else {
+    const i = evalActiveDepts.indexOf(dept);
+    if (i >= 0) evalActiveDepts.splice(i, 1);
+    else evalActiveDepts.push(dept);
+  }
   buildEvalDeptTabs();
   renderEvalStats();
   renderEvalResults();
 }
 
+function buildEvalGradeTabs() {
+  const grades = ['S','EE','ME','NI'];
+  document.getElementById("eval-grade-tabs").innerHTML =
+    `<button class="dept-tab ${evalActiveGrades.length===0?'active':''}" onclick="selectEvalGrade('all')">등급 전체</button>` +
+    grades.map(g=>`
+    <button class="dept-tab ${evalActiveGrades.includes(g)?'active':''}" onclick="selectEvalGrade('${g}')">${g}</button>`).join('');
+}
+
+function selectEvalGrade(grade) {
+  if (grade === 'all') {
+    evalActiveGrades = [];
+  } else {
+    const i = evalActiveGrades.indexOf(grade);
+    if (i >= 0) evalActiveGrades.splice(i, 1);
+    else evalActiveGrades.push(grade);
+  }
+  buildEvalGradeTabs();
+  renderEvalResults();
+}
+
 function evalDeptFiltered() {
-  return evalAllMembers.filter(m => evalActiveDept==='all' || (m.dept||"미지정")===evalActiveDept);
+  return evalAllMembers.filter(m => evalActiveDepts.length===0 || evalActiveDepts.includes(m.dept||"미지정"));
+}
+
+function evalGradeMatch(m) {
+  if (evalActiveGrades.length === 0) return true;
+  return (m.evaluations||[]).some(ev => evalActiveGrades.includes(ev.portfolio_grade));
 }
 
 function renderEvalStats() {
@@ -937,10 +983,10 @@ function getAdvancedTools(m) {
 }
 
 function renderEvalResults() {
-  const filtered = evalDeptFiltered().filter(m => m.evaluated);
+  const filtered = evalDeptFiltered().filter(m => m.evaluated && evalGradeMatch(m));
   const container = document.getElementById("eval-results-grid");
   if (!filtered.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>평가가 완료된 인원이 없어요</div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>조건에 맞는 평가 완료 인원이 없어요</div>`;
     return;
   }
   container.innerHTML = filtered.map(m => {
