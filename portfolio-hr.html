@@ -590,13 +590,18 @@ async function apiPost(body) {
   try {
     const res = await fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // application/json은 브라우저가 사전요청(OPTIONS)을 보내는데 Apps Script가 이를 처리하지 못해
+      // POST가 항상 실패함. text/plain은 사전요청 없이 바로 전송돼서 정상 동작함.
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(body),
       redirect: "follow",
     });
     return res.json();
   } catch(e) {
     const url = API + "?" + new URLSearchParams(body);
+    if (url.length > 6000) {
+      return { ok: false, error: "저장할 내용이 너무 많아서 요청이 실패했어요. 내용을 줄이거나 다시 시도해주세요." };
+    }
     const res = await fetch(url, { redirect:"follow" });
     return res.json();
   }
