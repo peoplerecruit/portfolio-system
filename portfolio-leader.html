@@ -302,7 +302,7 @@ select.f-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg x
     <aside class="sidebar">
       <div class="sidebar-top">
         <div class="sidebar-brand">포트폴리오 아카이빙</div>
-        <div class="sidebar-role">리더</div>
+        <div class="sidebar-role" id="sidebar-role">리더</div>
       </div>
       <nav class="sidebar-nav">
         <div class="nav-sec-title">메뉴</div>
@@ -377,7 +377,8 @@ select.f-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg x
                   <th>본부 / 팀</th>
                   <th>직책</th>
                   <th>포트폴리오</th>
-                  <th>평가 상태</th>
+                  <th>1차 평가</th>
+                  <th>2차 평가</th>
                   <th>등급</th>
                   <th></th>
                 </tr>
@@ -434,8 +435,9 @@ let filterStatus = 'all';
 let searchQuery  = '';
 let activeTeam   = 'all';
 let currentMemberEmail = null;
-let selectedGrade = null;
-let toolEvalData = []; // 툴별 평가 데이터
+let selectedGrade  = null;
+let selectedGrade2 = null;
+let toolEvalData = [];
 let periods = ["26년도 상반기", "26년도 하반기"];
 let activePeriod = "26년도 상반기";
 
@@ -447,13 +449,20 @@ async function apiPost(body) {
   try {
     const res = await fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // application/json은 브라우저가 사전요청(OPTIONS)을 보내는데, Apps Script는 이걸 처리 못 해서
+      // POST가 항상 막혀요. text/plain은 사전요청 없이 바로 전송돼서 POST가 정상 동작해요.
+      // (백엔드는 e.postData.contents를 그냥 문자열로 읽어서 JSON.parse 하기 때문에 내용은 동일하게 처리됨)
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(body),
       redirect: "follow",
     });
     return res.json();
   } catch(e) {
     const url = API + "?" + new URLSearchParams(body);
+    if (url.length > 6000) {
+      // GET으로 보내면 URL이 너무 길어서 어차피 실패함 — 무의미한 재시도로 조용히 죽는 대신 바로 에러 반환
+      return { ok: false, error: "저장할 내용이 너무 많아서 요청이 실패했어요. 코멘트를 줄이거나 다시 시도해주세요." };
+    }
     const res = await fetch(url, { redirect: "follow" });
     return res.json();
   }
@@ -479,7 +488,7 @@ async function loginWithEmail(email, pw) {
     const data = await apiGet({ action: "getUser", email });
     if (!data.ok) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showErr(data.error); return; }
     const userRoles = String(data.user.role).split(",").map(r => r.trim());
-    if (!userRoles.includes("leader") && !userRoles.includes("hr")) {
+    if (!userRoles.includes("leader") && !userRoles.includes("leader2") && !userRoles.includes("hr")) {
       showLoading(false); document.getElementById("login-screen").style.display = "flex"; showErr("리더 전용 페이지입니다."); return;
     }
     if (pw !== null) {
@@ -491,6 +500,12 @@ async function loginWithEmail(email, pw) {
     document.getElementById("user-nm").textContent = data.user.name;
     document.getElementById("user-av").textContent = data.user.name[0];
     document.getElementById("user-dept").textContent = data.user.dept_scope || "—";
+    // 역할 뱃지 동적 설정
+    const roles = String(data.user.role).split(",").map(r => r.trim());
+    const roleBadge = document.getElementById("sidebar-role");
+    if (roles.includes("hr")) { roleBadge.textContent = "HR 관리자"; roleBadge.style.background = "var(--purple-light)"; roleBadge.style.color = "var(--purple)"; }
+    else if (roles.includes("leader2")) { roleBadge.textContent = "SM/D (2차 평가자)"; roleBadge.style.background = "var(--amber-light)"; roleBadge.style.color = "var(--amber)"; }
+    else { roleBadge.textContent = "리더 (매니저)"; }
     renderPeriodTabs();
     await loadMemberList();
     showLoading(false);
@@ -588,6 +603,7 @@ function renderTable() {
     return matchTeam && matchSearch && matchFilter;
   });
 
+  const isLeader2 = hasRole2(currentUser, "leader2") || hasRole2(currentUser, "hr");
   document.getElementById("member-tbody").innerHTML = filtered.map(m => `
     <tr onclick="openMember('${m.email}')">
       <td><b>${m.name}</b></td>
@@ -597,19 +613,26 @@ function renderTable() {
         ? '<span class="badge badge-green">기록 있음</span>'
         : '<span class="badge badge-gray">반기 미제출</span>'}</td>
       <td>${m.evaluated
-        ? '<span class="badge badge-accent">평가완료</span>'
+        ? '<span class="badge badge-accent">1차 완료</span>'
         : m.submitted
           ? '<span class="badge badge-amber">평가필요</span>'
           : '<span class="badge badge-gray">대기중</span>'}</td>
+      <td>${isLeader2
+        ? (m.grade2
+            ? `<span class="grade-chip grade-${m.grade2}">${m.grade2}<span style="font-size:9px;opacity:.7"> 2차</span></span>`
+            : m.evaluated
+              ? '<span class="badge badge-amber" style="font-size:10px">2차 필요</span>'
+              : '<span class="badge badge-gray" style="font-size:10px">—</span>')
+        : '—'}</td>
       <td>${m.grade
         ? `<span class="grade-chip grade-${m.grade}">${m.grade}</span>`
         : '<span class="grade-chip grade-none">—</span>'}</td>
       <td>
         ${m.submitted
-          ? `<button class="btn btn-accent btn-sm" onclick="event.stopPropagation();openMember('${m.email}')">${m.evaluated ? '평가 보기' : '평가 작성'}</button>`
+          ? `<button class="btn btn-accent btn-sm" onclick="event.stopPropagation();openMember('${m.email}')">${m.evaluated ? (isLeader2 && !m.grade2 ? '2차 평가' : '평가 보기') : '평가 작성'}</button>`
           : `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openMember('${m.email}')">포트폴리오 보기</button>`}
       </td>
-    </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">해당하는 팀원이 없어요</td></tr>`;
+    </tr>`).join('') || `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">해당하는 팀원이 없어요</td></tr>`;
 }
 
 function filterMembers(val) { searchQuery = val; renderTable(); }
@@ -632,7 +655,12 @@ async function openMember(email) {
   const pf  = data.portfolio || [];
   const sk  = data.skills || [];
   const ev  = data.evaluation || null;
-  selectedGrade = ev?.portfolio_grade || null;
+  selectedGrade  = ev?.portfolio_grade  || null;
+  selectedGrade2 = ev?.portfolio_grade2 || null;
+
+  // 현재 사용자 역할 체크
+  const isLeader2Only = hasRole2(currentUser, "leader2") && !hasRole2(currentUser, "leader");
+  const isHR = hasRole2(currentUser, "hr");
 
   // 툴별 평가 데이터 초기화
   toolEvalData = sk.map((s, idx) => {
@@ -674,7 +702,8 @@ async function openMember(email) {
     <div class="detail-tabs">
       <button class="detail-tab active" onclick="switchDetailTab('portfolio',this)">📁 포트폴리오 (${pf.length}건)</button>
       <button class="detail-tab" onclick="switchDetailTab('skill',this)">🛠 툴 스킬 (${sk.length}건)</button>
-      <button class="detail-tab" onclick="switchDetailTab('eval',this)">✦ 평가 작성</button>
+      <button class="detail-tab" onclick="switchDetailTab('eval',this)">✦ 1차 평가 ${isLeader2Only ? '(읽기전용)' : ''}</button>
+      ${isLeader2Only ? `<button class="detail-tab" onclick="switchDetailTab('eval2',this)">✦✦ 2차 평가 ${ev?.portfolio_grade2 ? '(완료)' : ''}</button>` : ''}
     </div>
 
     <!-- 포트폴리오 탭 -->
@@ -702,115 +731,155 @@ async function openMember(email) {
 
     <!-- 평가 탭 -->
     <div id="dt-eval" style="display:none">
-      ${ev ? `
-      <div class="eval-result" style="margin-bottom:16px">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between">
-          <div>
-            <div class="eval-grade-big">${ev.portfolio_grade}</div>
-            <div class="eval-grade-lbl">${gradeLabels[ev.portfolio_grade]||''}</div>
+      ${(isLeader2Only || isHR) ? `
+        ${ev?.portfolio_grade ? `
+        <div class="eval-result" style="margin-bottom:16px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between">
+            <div><div class="eval-grade-big">${ev.portfolio_grade}</div><div class="eval-grade-lbl">${gradeLabels[ev.portfolio_grade]||''}</div></div>
+            <span class="badge badge-green">1차 평가완료</span>
           </div>
-          <span class="badge badge-green">평가완료</span>
+          ${ev.portfolio_comment?`<div class="eval-comment">${ev.portfolio_comment}</div>`:''}
         </div>
-        ${ev.portfolio_comment?`<div class="eval-comment">${ev.portfolio_comment}</div>`:''}
-      </div>` : ''}
-
-      <div class="eval-panel">
-        <div class="eval-panel-hd">
-          <span class="eval-panel-title">✦ ${ev ? '평가 수정' : '평가 작성'}</span>
-        </div>
-        <div class="eval-panel-body">
-          <div class="eval-guide">
-            <b style="font-size:12px;color:var(--accent);display:block;margin-bottom:6px">세부 진단 기준</b>
-            <div class="eval-guide-item"><div class="eval-guide-dot"></div><span>(상반기) 포트폴리오 전반에 대한 진단을 진행해주세요.</span></div>
-            <div class="eval-guide-item"><div class="eval-guide-dot"></div><span>아래 등급을 선택한 후에 종합 코멘트를 작성해주세요.</span></div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">툴 숙련도 평가 (1차 매니저)</span></div>
+          <div class="card-body">
+            ${ev.tool_eval ? (() => { try { return JSON.parse(ev.tool_eval).map(t=>`
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+                <div>
+                  <span style="font-size:13px;font-weight:600">${t.tool_name}</span>
+                  <span style="font-size:11px;color:var(--text3);margin-left:5px">${t.tool_type}</span>
+                  ${t.note?`<div style="font-size:12px;color:var(--amber);margin-top:3px">⭐ ${t.note}</div>`:''}
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:var(--text3)">본인: ${t.original_level||'—'}</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--accent)">리더: ${t.leader_level||'—'}</div>
+                </div>
+              </div>`).join(''); } catch(e){ return '<div style="color:var(--text3);font-size:13px">데이터 없음</div>'; } })()
+              : '<div style="color:var(--text3);font-size:13px">툴 평가 내용 없음</div>'}
           </div>
-
-          <!-- 등급 지표 표 -->
-          <div style="overflow-x:auto;margin-bottom:16px">
-            <table class="grade-table">
-              <thead><tr><th>등급</th><th>진단 기준</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td><span class="grade-chip grade-NI" style="font-size:11px">NI</span><br><span style="font-size:11px;font-weight:400;color:var(--text2)">개선이 필요함</span></td>
-                  <td>- 프로젝트 맥락과 결과물은 이해 가능하나 완성도가 아쉬움<br>- 툴 활용 수준이 기본 단계에 머무름<br>- 유사한 스타일·포맷의 작업 위주로 구성됨</td>
-                </tr>
-                <tr>
-                  <td><span class="grade-chip grade-ME" style="font-size:11px">ME</span><br><span style="font-size:11px;font-weight:400;color:var(--text2)">기대를 충족함</span></td>
-                  <td>- 프로젝트 목적과 맥락이 명확하게 정리되어 있음<br>- 기획 의도를 이해하고 제작 단계에서 적절히 구현함<br>- 툴 활용과 결과물 완성도가 실무 기준에 부합함</td>
-                </tr>
-                <tr>
-                  <td><span class="grade-chip grade-EE" style="font-size:11px">EE</span><br><span style="font-size:11px;font-weight:400;color:var(--text2)">기대를 뛰어넘음</span></td>
-                  <td>- 결과물의 완성도가 높고 일관성이 있음<br>- 디자인 디벨롭 포인트가 명확하고 설득력 있음<br>- 다수의 툴을 사용하며 목적에 맞게 응용함</td>
-                </tr>
-                <tr>
-                  <td><span class="grade-chip grade-S" style="font-size:11px">S</span><br><span style="font-size:11px;font-weight:400;color:var(--text2)">매우 우수함</span></td>
-                  <td>- 조직 내 기준을 넘어서, 레퍼런스로 활용 가능한 수준<br>- 표현력/구성/기술 모두에서 차별성이 있음<br>- 기획에 추가 의견을 제안하거나, 확장한 디벨롭 사례가 우수함</td>
-                </tr>
-              </tbody>
-            </table>
+        </div>` : `<div class="empty-state"><div class="empty-icon">⏳</div>매니저의 1차 평가가 아직 완료되지 않았어요</div>`}
+      ` : `
+        ${ev ? `
+        <div class="eval-result" style="margin-bottom:16px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between">
+            <div><div class="eval-grade-big">${ev.portfolio_grade}</div><div class="eval-grade-lbl">${gradeLabels[ev.portfolio_grade]||''}</div></div>
+            <span class="badge badge-green">평가완료</span>
           </div>
-
-          <div class="form-sec-lbl">포트폴리오 등급</div>
-          <div class="grade-grid">
-            ${['NI','ME','EE','S'].map(g=>`
-            <div class="grade-opt ${ev?.portfolio_grade===g?'selected':''}" onclick="selectGrade(this,'${g}')">
-              <div class="grade-code">${g}</div>
-              <div class="grade-lbl">${{NI:'개선 필요',ME:'기대 충족',EE:'기대 초과',S:'매우 우수'}[g]}</div>
-            </div>`).join('')}
-          </div>
-          <div class="form-div"></div>
-          <div class="form-sec-lbl">종합 코멘트</div>
-          <div class="form-row">
-            <textarea class="f-input" id="eval-comment" placeholder="포트폴리오 전반에 대한 코멘트를 작성해주세요...">${ev?.portfolio_comment||''}</textarea>
-          </div>
-          <div class="form-div"></div>
-          <div class="form-sec-lbl">툴 숙련도 점검</div>
-          <div class="tool-guide">
-            각 구성원이 작성한 툴 목록을 확인하고, 리더 시각에서 실제 수준을 평가해주세요.<br>
-            <span style="color:var(--amber);font-weight:600">⭐</span> 현재 직무와 다른 역량(모션, 3D 등)이 있다면 특이사항에 꼭 기재해주세요.
-          </div>
-
-          ${sk.length ? `
-          <div id="tool-eval-list">
-            ${sk.map((s, idx) => {
-              const saved = ev?.tool_eval ? JSON.parse(ev.tool_eval || '[]').find(t => t.tool_name === s.tool_name) : null;
-              const levels = ['기초 경험','기본 활용','실무 활용','고급 응용','전문가 리드'];
-              return `
-              <div class="tool-eval-item" id="tool-item-${idx}">
-                <div class="tool-eval-header">
-                  <div>
-                    <span class="tool-eval-name">${s.tool_name}</span>
-                    <span class="tool-eval-type">${s.tool_type}</span>
-                    ${s.tool_type !== '디자인툴' && s.tool_type !== 'AI' ? `<span class="special-badge">특이역량</span>` : ''}
+          ${ev.portfolio_comment?`<div class="eval-comment">${ev.portfolio_comment}</div>`:''}
+        </div>` : ''}
+        <div class="eval-panel">
+          <div class="eval-panel-hd"><span class="eval-panel-title">✦ ${ev ? '1차 평가 수정' : '1차 평가 작성'}</span></div>
+          <div class="eval-panel-body">
+            <div class="eval-guide">
+              <b style="font-size:12px;color:var(--accent);display:block;margin-bottom:6px">세부 진단 기준</b>
+              <div class="eval-guide-item"><div class="eval-guide-dot"></div><span>(상반기) 포트폴리오 전반에 대한 진단을 진행해주세요.</span></div>
+              <div class="eval-guide-item"><div class="eval-guide-dot"></div><span>아래 등급을 선택한 후에 종합 코멘트를 작성해주세요.</span></div>
+            </div>
+            <div style="overflow-x:auto;margin-bottom:16px">
+              <table class="grade-table">
+                <thead><tr><th>등급</th><th>진단 기준</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="grade-chip grade-NI" style="font-size:11px">NI</span><br><span style="font-size:11px;font-weight:400;color:var(--text2)">개선이 필요함</span></td><td>- 프로젝트 맥락과 결과물은 이해 가능하나 완성도가 아쉬움<br>- 툴 활용 수준이 기본 단계에 머무름</td></tr>
+                  <tr><td><span class="grade-chip grade-ME" style="font-size:11px">ME</span><br><span style="font-size:11px;font-weight:400;color:var(--text2)">기대를 충족함</span></td><td>- 프로젝트 목적과 맥락이 명확하게 정리되어 있음<br>- 툴 활용과 결과물 완성도가 실무 기준에 부합함</td></tr>
+                  <tr><td><span class="grade-chip grade-EE" style="font-size:11px">EE</span><br><span style="font-size:11px;font-weight:400;color:var(--text2)">기대를 뛰어넘음</span></td><td>- 결과물의 완성도가 높고 일관성이 있음<br>- 디자인 디벨롭 포인트가 명확하고 설득력 있음</td></tr>
+                  <tr><td><span class="grade-chip grade-S" style="font-size:11px">S</span><br><span style="font-size:11px;font-weight:400;color:var(--text2)">매우 우수함</span></td><td>- 조직 내 기준을 넘어서, 레퍼런스로 활용 가능한 수준<br>- 표현력/구성/기술 모두에서 차별성이 있음</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="form-sec-lbl">포트폴리오 등급</div>
+            <div class="grade-grid">
+              ${['NI','ME','EE','S'].map(g=>`
+              <div class="grade-opt ${ev?.portfolio_grade===g?'selected':''}" onclick="selectGrade(this,'${g}')">
+                <div class="grade-code">${g}</div>
+                <div class="grade-lbl">${{NI:'개선 필요',ME:'기대 충족',EE:'기대 초과',S:'매우 우수'}[g]}</div>
+              </div>`).join('')}
+            </div>
+            <div class="form-div"></div>
+            <div class="form-sec-lbl">종합 코멘트</div>
+            <div class="form-row">
+              <textarea class="f-input" id="eval-comment" placeholder="포트폴리오 전반에 대한 코멘트를 작성해주세요...">${ev?.portfolio_comment||''}</textarea>
+            </div>
+            <div class="form-div"></div>
+            <div class="form-sec-lbl">툴 숙련도 점검</div>
+            <div class="tool-guide">
+              각 구성원이 작성한 툴 목록을 확인하고, 리더 시각에서 실제 수준을 평가해주세요.<br>
+              <span style="color:var(--amber);font-weight:600">⭐</span> 현재 직무와 다른 역량(모션, 3D 등)이 있다면 특이사항에 꼭 기재해주세요.
+            </div>
+            ${sk.length ? `
+            <div id="tool-eval-list">
+              ${sk.map((s, idx) => {
+                const saved = ev?.tool_eval ? (() => { try { return JSON.parse(ev.tool_eval); } catch(e){ return []; } })().find(t => t.tool_name === s.tool_name) : null;
+                const levels = ['기초 경험','기본 활용','실무 활용','고급 응용','전문가 리드'];
+                return `
+                <div class="tool-eval-item" id="tool-item-${idx}">
+                  <div class="tool-eval-header">
+                    <div>
+                      <span class="tool-eval-name">${s.tool_name}</span>
+                      <span class="tool-eval-type">${s.tool_type}</span>
+                      ${s.tool_type !== '디자인툴' && s.tool_type !== 'AI' ? `<span class="special-badge">특이역량</span>` : ''}
+                    </div>
+                    <div class="tool-eval-original">본인 기재: <span class="lv ${lvMap[s.level]||'lv1'}" style="font-size:10px;padding:2px 7px">${s.level||'미기재'}</span></div>
                   </div>
-                  <div class="tool-eval-original">본인 기재: <span class="lv ${lvMap[s.level]||'lv1'}" style="font-size:10px;padding:2px 7px">${s.level||'미기재'}</span></div>
-                </div>
-                <div style="font-size:11px;color:var(--text3);margin-bottom:5px">리더 평가 수준</div>
-                <div class="tool-level-opts">
-                  ${levels.map(lv => `
-                    <div class="tool-level-opt ${saved?.leader_level === lv ? 'on' : ''}"
-                      onclick="selectToolLevel(this, ${idx})">${lv}</div>`).join('')}
-                  <div class="tool-level-opt ${saved?.leader_level === '확인불가' ? 'on' : ''}"
-                    onclick="selectToolLevel(this, ${idx})">확인불가</div>
-                </div>
-                <input class="tool-note-input" type="text"
-                  placeholder="특이사항 (예: 현 직무 외 모션 가능, 3D 백업 가능 등)"
-                  value="${saved?.note || ''}"
-                  oninput="updateToolNote(this, ${idx})">
-              </div>`;
-            }).join('')}
-          </div>` : `
-          <div style="padding:14px;background:var(--surface2);border-radius:var(--r-sm);font-size:13px;color:var(--text3);text-align:center">
-            등록된 툴 스킬이 없습니다
-          </div>`}
+                  <div style="font-size:11px;color:var(--text3);margin-bottom:5px">리더 평가 수준</div>
+                  <div class="tool-level-opts">
+                    ${levels.map(lv => `<div class="tool-level-opt ${saved?.leader_level === lv ? 'on' : ''}" onclick="selectToolLevel(this, ${idx})">${lv}</div>`).join('')}
+                    <div class="tool-level-opt ${saved?.leader_level === '확인불가' ? 'on' : ''}" onclick="selectToolLevel(this, ${idx})">확인불가</div>
+                  </div>
+                  <input class="tool-note-input" type="text"
+                    placeholder="특이사항 (예: 현 직무 외 모션 가능, 3D 백업 가능 등)"
+                    value="${saved?.note || ''}"
+                    oninput="updateToolNote(this, ${idx})">
+                </div>`;
+              }).join('')}
+            </div>` : `<div style="padding:14px;background:var(--surface2);border-radius:var(--r-sm);font-size:13px;color:var(--text3);text-align:center">등록된 툴 스킬이 없습니다</div>`}
+            <div class="btn-row">
+              <button class="btn btn-outline" onclick="goBack()">취소</button>
+              <button class="btn btn-accent" onclick="saveEval('${email}')">평가 저장</button>
+            </div>
+          </div>
+        </div>`}
+    </div>
 
-          <div class="btn-row">
-            <button class="btn btn-outline" onclick="goBack()">취소</button>
-            <button class="btn btn-accent" onclick="saveEval('${email}')">평가 저장</button>
+    <!-- 2차 평가 탭 (leader2 / HR만) -->
+    ${(isLeader2Only || isHR) ? `
+    <div id="dt-eval2" style="display:none">
+      ${!ev?.portfolio_grade ? `
+        <div class="empty-state"><div class="empty-icon">⏳</div>매니저의 1차 평가가 완료된 후 작성할 수 있어요</div>
+      ` : `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+          <span class="grade-chip grade-${ev.portfolio_grade}" style="font-size:14px">${ev.portfolio_grade}</span>
+          <div>
+            <div style="font-size:11px;color:var(--text3)">1차 평가 결과</div>
+            <div style="font-size:12px;color:var(--text2)">${ev.portfolio_comment||'코멘트 없음'}</div>
           </div>
         </div>
-      </div>
-    </div>`;
+        <div class="eval-panel">
+          <div class="eval-panel-hd"><span class="eval-panel-title">✦✦ 2차 평가 ${ev.portfolio_grade2 ? '수정' : '작성'}</span></div>
+          <div class="eval-panel-body">
+            <div class="eval-guide">
+              <div class="eval-guide-item"><div class="eval-guide-dot"></div><span>1차 평가 결과와 포트폴리오를 종합하여 최종 등급을 결정해주세요.</span></div>
+              <div class="eval-guide-item"><div class="eval-guide-dot"></div><span>2차 평가는 SM/D급 이상 권한에서만 열람 가능합니다.</span></div>
+            </div>
+            <div class="form-sec-lbl">2차 포트폴리오 등급</div>
+            <div class="grade-grid">
+              ${['NI','ME','EE','S'].map(g=>`
+              <div class="grade-opt ${ev?.portfolio_grade2===g?'selected':''}" onclick="selectGrade2(this,'${g}')">
+                <div class="grade-code">${g}</div>
+                <div class="grade-lbl">${{NI:'개선 필요',ME:'기대 충족',EE:'기대 초과',S:'매우 우수'}[g]}</div>
+              </div>`).join('')}
+            </div>
+            <div class="form-div"></div>
+            <div class="form-sec-lbl">2차 종합 코멘트</div>
+            <div class="form-row">
+              <textarea class="f-input" id="eval2-comment" placeholder="2차 평가 종합 코멘트를 작성해주세요...">${ev?.portfolio_comment2||''}</textarea>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-outline" onclick="goBack()">취소</button>
+              <button class="btn btn-accent" onclick="saveEval2('${email}')">2차 평가 저장</button>
+            </div>
+          </div>
+        </div>`}
+    </div>` : ''}`;
 
   showSection('detail', null);
 }
@@ -886,18 +955,50 @@ function renderAsset(a) {
 function togglePf(id) { document.getElementById("pf-"+id)?.classList.toggle("open"); }
 
 function switchDetailTab(id, btn) {
-  ['portfolio','skill','eval'].forEach(t => {
-    document.getElementById("dt-"+t).style.display = t===id ? "block" : "none";
+  ['portfolio','skill','eval','eval2'].forEach(t => {
+    const el = document.getElementById("dt-"+t);
+    if (el) el.style.display = t===id ? "block" : "none";
   });
   document.querySelectorAll(".detail-tab").forEach(t => t.classList.remove("active"));
   btn?.classList.add("active");
 }
 
+function hasRole2(user, role) {
+  if (!user) return false;
+  return String(user.role).split(",").map(r => r.trim()).includes(role);
+}
+
 // ── 평가 저장 ────────────────────────────────────────
 function selectGrade(el, g) {
-  document.querySelectorAll(".grade-opt").forEach(o => o.classList.remove("selected"));
+  el.closest(".grade-grid").querySelectorAll(".grade-opt").forEach(o => o.classList.remove("selected"));
   el.classList.add("selected");
   selectedGrade = g;
+}
+
+function selectGrade2(el, g) {
+  el.closest(".grade-grid").querySelectorAll(".grade-opt").forEach(o => o.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedGrade2 = g;
+}
+
+async function saveEval2(memberEmail) {
+  if (!selectedGrade2) { showNotif("2차 등급을 선택해주세요"); return; }
+  const comment2 = document.getElementById("eval2-comment")?.value || "";
+  const data = await apiGet({
+    action: "saveEvaluation2",
+    leader2_email: currentUser.email,
+    member_email: memberEmail,
+    period: activePeriod,
+    portfolio_grade2: selectedGrade2,
+    portfolio_comment2: comment2,
+  });
+  if (data.ok) {
+    showNotif("2차 평가가 저장되었습니다");
+    await loadMemberList();
+    await openMember(memberEmail);
+  } else {
+    showNotif("저장 실패: " + data.error);
+  }
 }
 
 function selectToolLevel(el, idx) {
@@ -929,17 +1030,26 @@ async function saveEval(memberEmail) {
                                    .map(t => `${t.tool_name}: ${t.note}`)
                                    .join(" / ");
 
-  const data = await apiPost({
-    action:            "saveEvaluation",
-    leader_email:      currentUser.email,
-    member_email:      memberEmail,
-    period:            activePeriod,
-    portfolio_grade:   selectedGrade,
-    portfolio_comment: comment,
-    tool_issue:        hasSpecial,
-    tool_comment:      toolComment,
-    tool_eval:         toolEvalJson,
-  });
+  showLoading(true);
+  let data;
+  try {
+    data = await apiPost({
+      action:            "saveEvaluation",
+      leader_email:      currentUser.email,
+      member_email:      memberEmail,
+      period:            activePeriod,
+      portfolio_grade:   selectedGrade,
+      portfolio_comment: comment,
+      tool_issue:        hasSpecial,
+      tool_comment:      toolComment,
+      tool_eval:         toolEvalJson,
+    });
+  } catch (e) {
+    showLoading(false);
+    showNotif("저장 중 오류가 발생했어요. 네트워크 상태를 확인하고 다시 시도해주세요.");
+    return;
+  }
+  showLoading(false);
 
   if (data.ok) {
     showNotif("평가가 저장되었습니다");
