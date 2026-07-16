@@ -441,28 +441,27 @@ let toolEvalData = [];
 let periods = ["26년도 상반기", "26년도 하반기"];
 let activePeriod = "26년도 상반기";
 
+let sessionToken = null;
+
 async function apiGet(params) {
-  const res = await fetch(API + "?" + new URLSearchParams(params));
+  const p = Object.assign({}, params);
+  if (sessionToken) p.token = sessionToken;
+  const res = await fetch(API + "?" + new URLSearchParams(p));
   return res.json();
 }
 async function apiPost(body) {
+  const b = Object.assign({}, body);
+  if (sessionToken) b.token = sessionToken;
   try {
     const res = await fetch(API, {
       method: "POST",
-      // application/json은 브라우저가 사전요청(OPTIONS)을 보내는데, Apps Script는 이걸 처리 못 해서
-      // POST가 항상 막혀요. text/plain은 사전요청 없이 바로 전송돼서 POST가 정상 동작해요.
-      // (백엔드는 e.postData.contents를 그냥 문자열로 읽어서 JSON.parse 하기 때문에 내용은 동일하게 처리됨)
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(b),
       redirect: "follow",
     });
     return res.json();
   } catch(e) {
-    const url = API + "?" + new URLSearchParams(body);
-    if (url.length > 6000) {
-      // GET으로 보내면 URL이 너무 길어서 어차피 실패함 — 무의미한 재시도로 조용히 죽는 대신 바로 에러 반환
-      return { ok: false, error: "저장할 내용이 너무 많아서 요청이 실패했어요. 코멘트를 줄이거나 다시 시도해주세요." };
-    }
+    const url = API + "?" + new URLSearchParams(b);
     const res = await fetch(url, { redirect: "follow" });
     return res.json();
   }
@@ -470,8 +469,9 @@ async function apiPost(body) {
 
 // ── 초기화 ────────────────────────────────────────────
 window.onload = () => {
-  const saved = localStorage.getItem("leader_email");
-  if (saved) loginWithEmail(saved, null);
+  sessionToken = localStorage.getItem("leader_token");
+  const savedEmail = localStorage.getItem("leader_email");
+  if (sessionToken && savedEmail) restoreSession(savedEmail);
   else { showLoading(false); document.getElementById("login-screen").style.display = "flex"; }
 };
 
@@ -479,33 +479,21 @@ async function login() {
   const email = document.getElementById("email-input").value.trim();
   const pw    = document.getElementById("pw-input").value.trim();
   if (!email || !pw) { showErr("이메일과 비밀번호를 입력해주세요"); return; }
-  await loginWithEmail(email, pw);
-}
 
-async function loginWithEmail(email, pw) {
   showLoading(true);
   try {
-    const data = await apiGet({ action: "getUser", email });
+    // 비밀번호는 서버에서만 확인한다 (클라이언트로는 비밀번호 값이 절대 내려오지 않음)
+    const data = await apiPost({ action: "login", email, password: pw });
     if (!data.ok) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showErr(data.error); return; }
     const userRoles = String(data.user.role).split(",").map(r => r.trim());
     if (!userRoles.includes("leader") && !userRoles.includes("leader2") && !userRoles.includes("hr")) {
       showLoading(false); document.getElementById("login-screen").style.display = "flex"; showErr("리더 전용 페이지입니다."); return;
     }
-    if (pw !== null) {
-      const stored = data.user.password || "0000";
-      if (String(pw) !== String(stored)) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showErr("비밀번호가 올바르지 않습니다."); return; }
-    }
-    currentUser = data.user;
+    sessionToken = data.token;
+    localStorage.setItem("leader_token", sessionToken);
     localStorage.setItem("leader_email", email);
-    document.getElementById("user-nm").textContent = data.user.name;
-    document.getElementById("user-av").textContent = data.user.name[0];
-    document.getElementById("user-dept").textContent = data.user.dept_scope || "—";
-    // 역할 뱃지 동적 설정
-    const roles = String(data.user.role).split(",").map(r => r.trim());
-    const roleBadge = document.getElementById("sidebar-role");
-    if (roles.includes("hr")) { roleBadge.textContent = "HR 관리자"; roleBadge.style.background = "var(--purple-light)"; roleBadge.style.color = "var(--purple)"; }
-    else if (roles.includes("leader2")) { roleBadge.textContent = "SM/D (2차 평가자)"; roleBadge.style.background = "var(--amber-light)"; roleBadge.style.color = "var(--amber)"; }
-    else { roleBadge.textContent = "리더 (매니저)"; }
+    currentUser = data.user;
+    applyUserToUI(data.user);
     renderPeriodTabs();
     await loadMemberList();
     showLoading(false);
@@ -518,7 +506,50 @@ async function loginWithEmail(email, pw) {
   }
 }
 
-function logout() { localStorage.removeItem("leader_email"); location.reload(); }
+async function restoreSession(email) {
+  showLoading(true);
+  try {
+    const data = await apiGet({ action: "getUser", email });
+    if (!data.ok) {
+      sessionToken = null;
+      localStorage.removeItem("leader_token");
+      localStorage.removeItem("leader_email");
+      showLoading(false);
+      document.getElementById("login-screen").style.display = "flex";
+      if (!data.needLogin) showErr(data.error || "다시 로그인해주세요.");
+      return;
+    }
+    const userRoles = String(data.user.role).split(",").map(r => r.trim());
+    if (!userRoles.includes("leader") && !userRoles.includes("leader2") && !userRoles.includes("hr")) {
+      showLoading(false); document.getElementById("login-screen").style.display = "flex"; showErr("리더 전용 페이지입니다."); return;
+    }
+    currentUser = data.user;
+    applyUserToUI(data.user);
+    renderPeriodTabs();
+    await loadMemberList();
+    showLoading(false);
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  } catch(e) {
+    showLoading(false);
+    document.getElementById("login-screen").style.display = "flex";
+    showErr("연결 오류가 발생했습니다.");
+  }
+}
+
+function applyUserToUI(user) {
+  document.getElementById("user-nm").textContent = user.name;
+  document.getElementById("user-av").textContent = user.name[0];
+  document.getElementById("user-dept").textContent = user.dept_scope || "—";
+  // 역할 뱃지 동적 설정
+  const roles = String(user.role).split(",").map(r => r.trim());
+  const roleBadge = document.getElementById("sidebar-role");
+  if (roles.includes("hr")) { roleBadge.textContent = "HR 관리자"; roleBadge.style.background = "var(--purple-light)"; roleBadge.style.color = "var(--purple)"; }
+  else if (roles.includes("leader2")) { roleBadge.textContent = "SM/D (2차 평가자)"; roleBadge.style.background = "var(--amber-light)"; roleBadge.style.color = "var(--amber)"; }
+  else { roleBadge.textContent = "리더 (매니저)"; }
+}
+
+function logout() { localStorage.removeItem("leader_email"); localStorage.removeItem("leader_token"); location.reload(); }
 
 // ── 비밀번호 변경 ─────────────────────────────────────
 function showPwModal() {
@@ -537,17 +568,14 @@ async function changePw() {
   if (!cur) { errEl.textContent="현재 비밀번호를 입력해주세요"; errEl.style.display="block"; return; }
   if (nw.length < 4) { errEl.textContent="비밀번호는 4자 이상이어야 해요"; errEl.style.display="block"; return; }
   if (nw !== cf) { errEl.textContent="새 비밀번호가 일치하지 않아요"; errEl.style.display="block"; return; }
-  if (cur !== String(currentUser.password || "0000")) {
-    errEl.textContent="현재 비밀번호가 올바르지 않아요"; errEl.style.display="block"; return;
-  }
 
-  const data = await apiPost({ action:"changePassword", email:currentUser.email, new_password:nw });
+  // 현재 비밀번호 검증은 서버에서 처리 (changePassword 액션 내부)
+  const data = await apiPost({ action:"changePassword", email:currentUser.email, current_password:cur, new_password:nw });
   if (data.ok) {
-    currentUser.password = nw;
     closePwModal();
     showNotif("비밀번호가 변경되었습니다");
   } else {
-    errEl.textContent = "변경 실패: " + data.error;
+    errEl.textContent = data.error;
     errEl.style.display = "block";
   }
 }
@@ -1030,26 +1058,17 @@ async function saveEval(memberEmail) {
                                    .map(t => `${t.tool_name}: ${t.note}`)
                                    .join(" / ");
 
-  showLoading(true);
-  let data;
-  try {
-    data = await apiPost({
-      action:            "saveEvaluation",
-      leader_email:      currentUser.email,
-      member_email:      memberEmail,
-      period:            activePeriod,
-      portfolio_grade:   selectedGrade,
-      portfolio_comment: comment,
-      tool_issue:        hasSpecial,
-      tool_comment:      toolComment,
-      tool_eval:         toolEvalJson,
-    });
-  } catch (e) {
-    showLoading(false);
-    showNotif("저장 중 오류가 발생했어요. 네트워크 상태를 확인하고 다시 시도해주세요.");
-    return;
-  }
-  showLoading(false);
+  const data = await apiPost({
+    action:            "saveEvaluation",
+    leader_email:      currentUser.email,
+    member_email:      memberEmail,
+    period:            activePeriod,
+    portfolio_grade:   selectedGrade,
+    portfolio_comment: comment,
+    tool_issue:        hasSpecial,
+    tool_comment:      toolComment,
+    tool_eval:         toolEvalJson,
+  });
 
   if (data.ok) {
     showNotif("평가가 저장되었습니다");
