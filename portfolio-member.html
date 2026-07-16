@@ -745,8 +745,12 @@ function addPfPeriod() {
 }
 
 
+let sessionToken = null;
+
 async function apiGet(params) {
-  const res = await fetch(API + "?" + new URLSearchParams(params));
+  const p = Object.assign({}, params);
+  if (sessionToken) p.token = sessionToken;
+  const res = await fetch(API + "?" + new URLSearchParams(p));
   return res.json();
 }
 async function apiPost(body) {
@@ -754,14 +758,16 @@ async function apiPost(body) {
   Object.entries(body).forEach(([k, v]) => {
     safeBody[k] = v !== undefined && v !== null ? String(v) : "";
   });
+  if (sessionToken) safeBody.token = sessionToken;
   const url = API + "?" + new URLSearchParams(safeBody);
   const res = await fetch(url, { redirect: "follow" });
   return res.json();
 }
 
 window.onload = () => {
-  const saved = localStorage.getItem("pf_email");
-  if (saved) loginWithEmail(saved, null);
+  sessionToken = localStorage.getItem("pf_token");
+  const savedEmail = localStorage.getItem("pf_email");
+  if (sessionToken && savedEmail) restoreSession(savedEmail);
   else { showLoading(false); document.getElementById("login-screen").style.display = "flex"; }
 };
 
@@ -769,24 +775,47 @@ async function login() {
   const email = document.getElementById("email-input").value.trim();
   const pw = document.getElementById("pw-input").value.trim();
   if (!email || !pw) { showLoginErr("이메일과 비밀번호를 입력해주세요"); return; }
-  await loginWithEmail(email, pw);
-}
 
-async function loginWithEmail(email, pw) {
   showLoading(true);
   try {
-    const data = await apiGet({ action: "getUser", email });
+    // 비밀번호는 서버에서만 확인한다 (클라이언트로는 비밀번호 값이 절대 내려오지 않음)
+    const data = await apiPost({ action: "login", email, password: pw });
     if (!data.ok) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr(data.error); return; }
     const userRoles = String(data.user.role).split(",").map(r => r.trim());
     if (!userRoles.includes("member") && !userRoles.includes("leader") && !userRoles.includes("hr")) {
       showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr("접근 권한이 없습니다."); return;
     }
-    if (pw !== null) {
-      const stored = data.user.password || "0000";
-      if (String(pw) !== String(stored)) { showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr("비밀번호가 올바르지 않습니다."); return; }
+    sessionToken = data.token;
+    localStorage.setItem("pf_token", sessionToken);
+    localStorage.setItem("pf_email", email);
+    currentUser = data.user;
+    await initApp();
+  } catch(e) {
+    showLoading(false);
+    document.getElementById("login-screen").style.display = "flex";
+    showLoginErr("연결 오류: " + e.message);
+    console.error("Login error:", e);
+  }
+}
+
+async function restoreSession(email) {
+  showLoading(true);
+  try {
+    const data = await apiGet({ action: "getUser", email });
+    if (!data.ok) {
+      sessionToken = null;
+      localStorage.removeItem("pf_token");
+      localStorage.removeItem("pf_email");
+      showLoading(false);
+      document.getElementById("login-screen").style.display = "flex";
+      if (!data.needLogin) showLoginErr(data.error || "다시 로그인해주세요.");
+      return;
+    }
+    const userRoles = String(data.user.role).split(",").map(r => r.trim());
+    if (!userRoles.includes("member") && !userRoles.includes("leader") && !userRoles.includes("hr")) {
+      showLoading(false); document.getElementById("login-screen").style.display = "flex"; showLoginErr("접근 권한이 없습니다."); return;
     }
     currentUser = data.user;
-    localStorage.setItem("pf_email", email);
     await initApp();
   } catch(e) {
     showLoading(false);
@@ -809,7 +838,7 @@ async function initApp() {
   renderPfPeriodTabs();
 }
 
-function logout() { localStorage.removeItem("pf_email"); location.reload(); }
+function logout() { localStorage.removeItem("pf_email"); localStorage.removeItem("pf_token"); location.reload(); }
 function showLoginErr(msg) { const el = document.getElementById("login-err"); el.textContent = msg; el.style.display = "block"; }
 
 // ── 비밀번호 ──
@@ -830,10 +859,11 @@ async function changePw() {
   if (!pwModalFromLogin && !cur) { errEl.textContent = "현재 비밀번호를 입력해주세요"; errEl.style.display = "block"; return; }
   if (nw.length < 4) { errEl.textContent = "비밀번호는 4자 이상이어야 해요"; errEl.style.display = "block"; return; }
   if (nw !== cf) { errEl.textContent = "새 비밀번호가 일치하지 않아요"; errEl.style.display = "block"; return; }
-  if (!pwModalFromLogin && cur !== String(currentUser.password || "0000")) { errEl.textContent = "현재 비밀번호가 올바르지 않아요"; errEl.style.display = "block"; return; }
-  const data = await apiPost({ action: "changePassword", email: currentUser.email, new_password: nw });
-  if (data.ok) { currentUser.password = nw; closePwModal(); showNotif("비밀번호가 변경되었습니다"); }
-  else { errEl.textContent = "변경 실패: " + data.error; errEl.style.display = "block"; }
+  // 최초 로그인 직후 강제 변경 흐름은 기본 비밀번호(0000)로 간주, 그 외엔 입력한 현재 비밀번호를 서버가 검증
+  const currentPwToSend = pwModalFromLogin ? "0000" : cur;
+  const data = await apiPost({ action: "changePassword", email: currentUser.email, current_password: currentPwToSend, new_password: nw });
+  if (data.ok) { closePwModal(); showNotif("비밀번호가 변경되었습니다"); }
+  else { errEl.textContent = data.error; errEl.style.display = "block"; }
 }
 
 // ── 담당 프로젝트 ──
