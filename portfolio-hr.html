@@ -651,23 +651,29 @@ const gradeLabels = {NI:'개선이 필요함',ME:'기대를 충족함',EE:'기�
 const EXCLUDED_JOBS = ['채용','급여'];
 const lvMap = {"전문가 리드":"lv5","고급 응용":"lv4","실무 활용":"lv3","기본 활용":"lv2","기초 경험":"lv1"};
 
+let sessionToken = null;
+
 async function apiGet(params) {
-  const res = await fetch(API + "?" + new URLSearchParams(params));
+  const p = Object.assign({}, params);
+  if (sessionToken) p.token = sessionToken;
+  const res = await fetch(API + "?" + new URLSearchParams(p));
   return res.json();
 }
 async function apiPost(body) {
+  const b = Object.assign({}, body);
+  if (sessionToken) b.token = sessionToken;
   try {
     const res = await fetch(API, {
       method: "POST",
       // application/json은 브라우저가 사전요청(OPTIONS)을 보내는데 Apps Script가 이를 처리하지 못해
       // POST가 항상 실패함. text/plain은 사전요청 없이 바로 전송돼서 정상 동작함.
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(b),
       redirect: "follow",
     });
     return res.json();
   } catch(e) {
-    const url = API + "?" + new URLSearchParams(body);
+    const url = API + "?" + new URLSearchParams(b);
     if (url.length > 6000) {
       return { ok: false, error: "저장할 내용이 너무 많아서 요청이 실패했어요. 내용을 줄이거나 다시 시도해주세요." };
     }
@@ -678,31 +684,34 @@ async function apiPost(body) {
 
 // ── 초기화 ──────────────────────────────────────────
 window.onload = () => {
-  const saved = localStorage.getItem("hr_email");
-  if (saved) loginWithEmail(saved, null);
+  sessionToken = localStorage.getItem("hr_token");
+  const savedEmail = localStorage.getItem("hr_email");
+  if (sessionToken && savedEmail) restoreSession(savedEmail);
   else { showLoading(false); document.getElementById("login-screen").style.display = "flex"; }
 };
 
-async function login() {
-  const email = document.getElementById("email-input").value.trim();
-  const pw    = document.getElementById("pw-input").value.trim();
-  if (!email || !pw) { showErr("이메일과 비밀번호를 입력해주세요"); return; }
-  await loginWithEmail(email, pw);
-}
-
-async function loginWithEmail(email, pw) {
+async function restoreSession(email) {
   showLoading(true);
   try {
+    // 토큰이 만료/위조됐으면 서버가 needLogin:true로 응답 → 로그인 화면으로
     const data = await apiGet({ action:"getUser", email });
-    if (!data.ok) { showLoading(false); document.getElementById("login-screen").style.display="flex"; showErr(data.error); return; }
+    if (!data.ok) {
+      sessionToken = null;
+      localStorage.removeItem("hr_token");
+      localStorage.removeItem("hr_email");
+      showLoading(false);
+      document.getElementById("login-screen").style.display = "flex";
+      if (!data.needLogin) showErr(data.error || "다시 로그인해주세요.");
+      return;
+    }
     const roles = String(data.user.role).split(",").map(r=>r.trim());
-    if (!roles.includes("hr")) { showLoading(false); document.getElementById("login-screen").style.display="flex"; showErr("HR 전용 페이지입니다."); return; }
-    if (pw !== null) {
-      const stored = data.user.password || "0000";
-      if (String(pw) !== String(stored)) { showLoading(false); document.getElementById("login-screen").style.display="flex"; showErr("비밀번호가 올바르지 않습니다."); return; }
+    if (!roles.includes("hr")) {
+      showLoading(false);
+      document.getElementById("login-screen").style.display = "flex";
+      showErr("HR 전용 페이지입니다.");
+      return;
     }
     currentUser = data.user;
-    localStorage.setItem("hr_email", email);
     document.getElementById("user-nm").textContent = data.user.name;
     document.getElementById("user-av").textContent = data.user.name[0];
     renderPeriodTabs();
@@ -716,7 +725,42 @@ async function loginWithEmail(email, pw) {
     showErr("연결 오류: " + e.message);
   }
 }
-function logout() { localStorage.removeItem("hr_email"); location.reload(); }
+
+async function login() {
+  const email = document.getElementById("email-input").value.trim();
+  const pw    = document.getElementById("pw-input").value.trim();
+  if (!email || !pw) { showErr("이메일과 비밀번호를 입력해주세요"); return; }
+
+  showLoading(true);
+  try {
+    // 비밀번호는 서버에서만 확인한다 (클라이언트로는 비밀번호 값이 절대 내려오지 않음)
+    const data = await apiPost({ action:"login", email, password: pw });
+    if (!data.ok) { showLoading(false); showErr(data.error); return; }
+
+    const roles = String(data.user.role).split(",").map(r=>r.trim());
+    if (!roles.includes("hr")) { showLoading(false); showErr("HR 전용 페이지입니다."); return; }
+
+    sessionToken = data.token;
+    localStorage.setItem("hr_token", sessionToken);
+    localStorage.setItem("hr_email", email);
+    currentUser = data.user;
+    document.getElementById("user-nm").textContent = data.user.name;
+    document.getElementById("user-av").textContent = data.user.name[0];
+    renderPeriodTabs();
+    await loadDashboard();
+    showLoading(false);
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  } catch(e) {
+    showLoading(false);
+    showErr("연결 오류: " + e.message);
+  }
+}
+function logout() {
+  localStorage.removeItem("hr_email");
+  localStorage.removeItem("hr_token");
+  location.reload();
+}
 
 // ── 비밀번호 변경 ─────────────────────────────────────
 function showPwModal() {
@@ -735,17 +779,14 @@ async function changePw() {
   if (!cur) { errEl.textContent="현재 비밀번호를 입력해주세요"; errEl.style.display="block"; return; }
   if (nw.length < 4) { errEl.textContent="비밀번호는 4자 이상이어야 해요"; errEl.style.display="block"; return; }
   if (nw !== cf) { errEl.textContent="새 비밀번호가 일치하지 않아요"; errEl.style.display="block"; return; }
-  if (cur !== String(currentUser.password || "0000")) {
-    errEl.textContent="현재 비밀번호가 올바르지 않아요"; errEl.style.display="block"; return;
-  }
 
-  const data = await apiPost({ action:"changePassword", email:currentUser.email, new_password:nw });
+  // 현재 비밀번호 검증은 서버에서 처리 (changePassword 액션 내부)
+  const data = await apiPost({ action:"changePassword", email:currentUser.email, current_password:cur, new_password:nw });
   if (data.ok) {
-    currentUser.password = nw;
     closePwModal();
     showNotif("비밀번호가 변경되었습니다");
   } else {
-    errEl.textContent = "변경 실패: " + data.error;
+    errEl.textContent = data.error;
     errEl.style.display = "block";
   }
 }
