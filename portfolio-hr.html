@@ -1325,6 +1325,10 @@ const JOB_CAP_MAP = {
 
 let profileAllMembers = [];  // evalResults 로드 시 같이 채워짐 (diagnoseProfile 재사용용)
 
+// ChatGPT/Claude/Gemini 같은 언어 기반 범용 AI는 직무와 무관하게 누구나 쓰는 툴이라
+// "특이사항"(직무 외 툴 보유) 판단에서는 제외한다. Midjourney/Runway 등 디자인·제작 특화 AI만 반영.
+const GENERAL_AI_TOOLS = new Set(["ChatGPT","Claude","Gemini"]);
+
 function diagnoseProfile(m) {
   const caps = JOB_CAP_MAP[m.job] || [];
   const userTools = {};
@@ -1346,6 +1350,7 @@ function diagnoseProfile(m) {
     if (job===m.job) return;
     caps2.forEach(cap=>{
       cap.tools.forEach(t=>{
+        if (GENERAL_AI_TOOLS.has(t)) return; // 범용 AI는 특이사항 대상에서 제외
         if (ownToolNames.has(t)||seen.has(t)) return;
         const lvl = userTools[t];
         if ((LEVEL_RANK[lvl]||0)>=3) { seen.add(t); specials.push(`본인 직무(${m.job||'—'}) 기준 툴은 아니지만, ${job} 직무의 '${cap.cap}' 영역에서 쓰는 ${t} 툴을 ${lvl} 수준으로 다루고 있어요. 협업이나 인력 배치를 검토할 때 참고할 만한 부분이에요.`); }
