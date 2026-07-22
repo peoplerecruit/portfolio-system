@@ -483,13 +483,23 @@ select.f-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg x
           <div class="dept-tabs" id="job-group-tabs"></div>
 
           <div class="card" style="padding:16px 18px">
-            <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px">🎨 디자인·기타 툴</div>
-            <div id="browse-design-tools" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-            <div style="font-size:11px;font-weight:600;color:var(--text3);margin:16px 0 8px">🤖 AI 툴</div>
-            <div id="browse-ai-tools" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+            <div id="browse-cap-groups"></div>
           </div>
 
           <div id="browse-tool-members"></div>
+
+          <!-- 방식 C: 툴 사전 (접이식 참고표) -->
+          <div class="card" style="padding:0;overflow:hidden;margin-top:14px">
+            <div class="fold-hd" onclick="toggleFold(this)" style="cursor:pointer;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+              <span class="card-title">📖 툴별 역량 사전 — 이 툴이 어떤 역량에 쓰이나요?</span>
+              <span class="fold-caret">▾</span>
+            </div>
+            <div style="display:none;padding:0">
+              <div style="overflow-x:auto">
+                <table id="tool-dict-table" style="width:100%;border-collapse:collapse;font-size:12px"></table>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 조직 역량 -->
@@ -1161,7 +1171,7 @@ function renderEvalResults() {
     <div class="card eval-summary-card">
       <div class="eval-fold-hd" onclick="toggleFold(this)">
         <div class="eval-fold-main">
-          <b>${m.name||'—'}</b>
+          <b>${m.name||'—'}</b>${roleTag(m)}
           <span class="badge badge-gray">${m.dept||'—'}</span>
           <span class="badge badge-gray">${m.team||'—'}</span>
           <span class="badge badge-gray">${m.job||'—'}</span>
@@ -1296,38 +1306,116 @@ async function loadOrgCap() {
 }
 
 // ── 개인 역량 프로필 ──────────────────────────────────
+// AI 활용은 직무 성격에 맞는 세부 카테고리로 진단한다 (A안).
+//  · 콘텐츠디자이너/AD/CD → 이미지 생성 AI
+//  · 모션그래퍼 → 이미지 생성 + 영상·모션 생성 AI
+//  · PD/AE → 영상·모션 생성 + 오디오·음성 AI
+const AI_IMAGE_TOOLS = ["Midjourney","Adobe Firefly","Stable Diffusion","Krea AI","Magnific AI","Nano Banana","Seedream","Google ImageFX","Google Whisk"];
+const AI_VIDEO_TOOLS = ["Runway","Kling AI","Higgsfield","Seedance","Google Flow"];
+const AI_AUDIO_TOOLS = ["Suno","ElevenLabs","Supertone","Typecast","Vocal Remover"];
+
 const JOB_CAP_MAP = {
   "콘텐츠디자이너":[
     {cap:"2D 디자인",tools:["Photoshop","Illustrator","Figma","Canva"]},
-    {cap:"AI 활용(공통)",tools:["ChatGPT","Midjourney","Firefly","Runway","Pika","Kling AI"]},
+    {cap:"AI · 이미지 생성",tools:AI_IMAGE_TOOLS},
   ],
   "아트디렉터":[
     {cap:"2D 디자인",tools:["Photoshop","Illustrator","Figma","Canva"]},
-    {cap:"AI 활용(공통)",tools:["ChatGPT","Midjourney","Firefly","Runway","Pika","Kling AI"]},
+    {cap:"AI · 이미지 생성",tools:AI_IMAGE_TOOLS},
   ],
   "크리에이티브디렉터":[
     {cap:"2D 디자인",tools:["Photoshop","Illustrator","Figma","Canva"]},
-    {cap:"AI 활용(공통)",tools:["ChatGPT","Midjourney","Firefly","Runway","Pika","Kling AI"]},
+    {cap:"AI · 이미지 생성",tools:AI_IMAGE_TOOLS},
   ],
   "모션그래퍼":[
     {cap:"3D 모델링",tools:["Cinema 4D","Blender","Maya","3ds Max","Substance Painter"]},
     {cap:"모션·애니메이션",tools:["Blender","After Effects","Redshift","Octane"]},
-    {cap:"AI 활용(공통)",tools:["ChatGPT","Midjourney","Firefly","Runway","Pika","Kling AI","Higgsfield"]},
+    {cap:"AI · 이미지 생성",tools:AI_IMAGE_TOOLS},
+    {cap:"AI · 영상·모션 생성",tools:AI_VIDEO_TOOLS},
   ],
   "PD":[
     {cap:"영상편집",tools:["Premiere Pro","Final Cut Pro","DaVinci Resolve","After Effects","Media Encoder"]},
-    {cap:"AI 활용(공통)",tools:["ChatGPT","Claude","Gemini","Midjourney","Firefly","Runway","Pika","CapCut"]},
+    {cap:"AI · 영상·모션 생성",tools:AI_VIDEO_TOOLS},
+    {cap:"AI · 오디오·음성",tools:AI_AUDIO_TOOLS},
   ],
   "AE(영상)":[
-    {cap:"AI 활용(공통)",tools:["ChatGPT","Claude","Gemini","Midjourney","Firefly","Runway","Pika","CapCut"]},
+    {cap:"AI · 영상·모션 생성",tools:AI_VIDEO_TOOLS},
+    {cap:"AI · 오디오·음성",tools:AI_AUDIO_TOOLS},
   ],
 };
 
 let profileAllMembers = [];  // evalResults 로드 시 같이 채워짐 (diagnoseProfile 재사용용)
 
-// ChatGPT/Claude/Gemini 같은 언어 기반 범용 AI는 직무와 무관하게 누구나 쓰는 툴이라
-// "특이사항"(직무 외 툴 보유) 판단에서는 제외한다. Midjourney/Runway 등 디자인·제작 특화 AI만 반영.
-const GENERAL_AI_TOOLS = new Set(["ChatGPT","Claude","Gemini"]);
+// ── 세부역량 설명 (직무세분화 표 기준) ─────────────────
+const CAP_DESC = {
+  "2D 디자인": "SNS 콘텐츠·카드뉴스·배너·상세페이지·제안서 이미지·키비주얼 전개 등 정적 2D 디자인 산출물을 제작하는 업무",
+  "3D 모델링": "제품·캐릭터·공간·오브젝트 등 3D 에셋을 제작하고 텍스처·라이팅·렌더링을 통해 시각화하는 업무",
+  "모션·애니메이션": "제작된 3D 모델이나 오브젝트에 움직임을 부여하고, 카메라 워크·라이팅·렌더링을 통해 영상화하는 업무",
+  "영상편집": "촬영본을 기반으로 컷 편집·타임라인 구성·자막·사운드·후반 품질 검수 등 영상 완성도를 관리하는 업무",
+  "AI · 범용": "리서치·기획·문서·아이디어 보조에 쓰는 언어/생산성 AI. 직무 산출물을 직접 만들지 않는 전 직무 공통 툴",
+  "AI · 이미지 생성": "정적 이미지·비주얼 산출물을 생성·편집하는 AI. 2D 디자인 역량과 연결",
+  "AI · 영상·모션 생성": "영상 클립·모션을 생성하는 AI. 모션·애니메이션 / 영상편집 역량과 연결",
+  "AI · 오디오·음성": "사운드·나레이션·더빙·음원을 만드는 AI. 주로 영상 후반작업에 사용",
+};
+
+// ── 툴 → 세부역량 매핑 (직무세분화 표 기준, 실제 스킬 데이터에 존재하는 툴만) ──
+// 각 값은 [세부역량, 대표 직무] 목록. 범용 AI(ChatGPT/Claude/Gemini 등)는 "전 직무 공통"으로 표기.
+const TOOL_CAP_MAP = {
+  // 디자인·제작 툴
+  "Photoshop":       [["2D 디자인","콘텐츠디자이너·아트디렉터·CD"]],
+  "Illustrator":     [["2D 디자인","콘텐츠디자이너·아트디렉터·CD"]],
+  "Figma":           [["2D 디자인","콘텐츠디자이너·아트디렉터·CD"]],
+  "Canva":           [["2D 디자인","콘텐츠디자이너·아트디렉터·CD"]],
+  "InDesign":        [["2D 디자인","콘텐츠디자이너·아트디렉터·CD"]],
+  "Procreate":       [["2D 디자인","콘텐츠디자이너·아트디렉터·CD"]],
+  "Animate":         [["2D 디자인","콘텐츠디자이너·아트디렉터·CD"]],
+  "Cinema 4D":       [["3D 모델링","모션그래퍼"]],
+  "Unreal Engine":   [["3D 모델링","모션그래퍼"]],
+  "Nuke":            [["3D 모델링","모션그래퍼"],["모션·애니메이션","모션그래퍼"]],
+  "After Effects":   [["모션·애니메이션","모션그래퍼"],["영상편집","PD"]],
+  "Premiere Pro":    [["영상편집","PD"]],
+  "Final Cut Pro":   [["영상편집","PD"]],
+  "DaVinci Resolve": [["영상편집","PD"]],
+  "CapCut":          [["영상편집","PD"]],
+  "Capture One":     [["영상편집","PD"]],
+  "EVOTO":           [["2D 디자인","콘텐츠디자이너·아트디렉터·CD"]],
+  // AI 툴 ① 범용 (전 직무 공통, 특이사항 제외)
+  "ChatGPT":         [["AI · 범용","전 직무"]],
+  "Claude":          [["AI · 범용","전 직무"]],
+  "Gemini":          [["AI · 범용","전 직무"]],
+  "Perplexity":      [["AI · 범용","전 직무"]],
+  "CLOVA":           [["AI · 범용","전 직무"]],
+  "Lilys AI":        [["AI · 범용","전 직무"]],
+  "Google AI Studio":[["AI · 범용","전 직무"]],
+  "Manus AI":        [["AI · 범용","전 직무"]],
+  "Opal":            [["AI · 범용","전 직무"]],
+  // AI 툴 ② 이미지 생성 (2D 디자인 특화)
+  "Midjourney":      [["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  "Adobe Firefly":   [["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  "Stable Diffusion":[["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  "Krea AI":         [["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  "Magnific AI":     [["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  "Nano Banana":     [["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  "Seedream":        [["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  "Google ImageFX":  [["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  "Google Whisk":    [["AI · 이미지 생성","콘텐츠디자이너·AD·CD"]],
+  // AI 툴 ③ 영상·모션 생성 (모션그래퍼·PD 특화)
+  "Runway":          [["AI · 영상·모션 생성","모션그래퍼·PD"]],
+  "Kling AI":        [["AI · 영상·모션 생성","모션그래퍼·PD"]],
+  "Higgsfield":      [["AI · 영상·모션 생성","모션그래퍼·PD"]],
+  "Seedance":        [["AI · 영상·모션 생성","모션그래퍼·PD"]],
+  "Google Flow":     [["AI · 영상·모션 생성","모션그래퍼·PD"]],
+  // AI 툴 ④ 오디오·음성 (PD 영상편집 보조)
+  "Suno":            [["AI · 오디오·음성","PD"]],
+  "ElevenLabs":      [["AI · 오디오·음성","PD"]],
+  "Supertone":       [["AI · 오디오·음성","PD"]],
+  "Typecast":        [["AI · 오디오·음성","PD"]],
+  "Vocal Remover":   [["AI · 오디오·음성","PD"]],
+};
+
+// 범용 AI(언어/생산성)는 직무와 무관하게 누구나 쓰는 툴이라 "특이사항"(직무 외 툴 보유) 판단에서 제외한다.
+// 이미지·영상·오디오 생성 등 제작 특화 AI만 특이사항에 반영된다.
+const GENERAL_AI_TOOLS = new Set(["ChatGPT","Claude","Gemini","Perplexity","CLOVA","Lilys AI","Google AI Studio","Manus AI","Opal"]);
 
 function diagnoseProfile(m) {
   const caps = JOB_CAP_MAP[m.job] || [];
@@ -1358,6 +1446,19 @@ function diagnoseProfile(m) {
     });
   });
   return {result, specials: specials.slice(0,3)};
+}
+
+// 이름 옆에 붙일 직책/역할 표시. 리더면 리더 뱃지를, 그 외엔 직책(rank)을 보여준다.
+function roleTag(m) {
+  const roles = String(m.role||'').split(",").map(r=>r.trim());
+  const isLeader = roles.includes("leader") || roles.includes("leader2");
+  const rank = m.rank ? String(m.rank).trim() : '';
+  if (isLeader) {
+    const label = roles.includes("leader2") ? "2차 평가자" : "리더";
+    return `<span style="font-size:10.5px;font-weight:700;color:#fff;background:var(--accent);padding:1px 8px;border-radius:10px;margin-left:6px">${label}${rank?' · '+rank:''}</span>`;
+  }
+  if (rank) return `<span style="font-size:10.5px;font-weight:600;color:var(--text2);background:var(--surface2);padding:1px 8px;border-radius:10px;margin-left:6px">${rank}</span>`;
+  return '';
 }
 
 function toggleFold(hdEl) {
@@ -1399,7 +1500,7 @@ function renderToolSearchResults(results, q) {
     results.map(r => `
       <div class="skill-item" style="cursor:pointer" onclick="openMemberDetail('${r.email}')">
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600">${r.name||'—'}
+          <div style="font-size:13px;font-weight:600">${r.name||'—'}${roleTag(r)}
             <span style="font-size:11px;font-weight:400;color:var(--text3)">${r.dept||'—'} · ${r.team||'—'} · ${r.job||'—'}</span>
           </div>
           <div style="font-size:11px;color:var(--text3)">${r.tool_name} · ${r.source==='leader'?'리더 평가':'본인 기재'}</div>
@@ -1444,19 +1545,81 @@ function buildToolChips(entries, isAI) {
   return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
 }
 
+// 세부역량 표시 순서 (없는 역량은 자동 생략)
+const CAP_ORDER = ["2D 디자인","3D 모델링","모션·애니메이션","영상편집","AI · 이미지 생성","AI · 영상·모션 생성","AI · 오디오·음성","AI · 범용"];
+
 function renderToolBrowse() {
   const entries = currentJobGroupEntries();
-  const designChips = buildToolChips(entries, false);
-  const aiChips = buildToolChips(entries, true);
 
-  const chipHtml = (chips) => chips.length
-    ? chips.map(([name,cnt])=>`<button class="tool-chip ${name===activeBrowseTool?'active':''}" onclick="selectBrowseTool('${name.replace(/'/g,"\\'")}')">${name} <span class="tool-chip-count">${cnt}</span></button>`).join('')
-    : `<span style="font-size:12px;color:var(--text3)">등록된 툴이 없어요</span>`;
+  // 툴별 사용 인원 수 집계
+  const counts = {};
+  entries.forEach(e => { counts[e.tool_name] = (counts[e.tool_name]||0) + 1; });
 
-  document.getElementById("browse-design-tools").innerHTML = chipHtml(designChips);
-  document.getElementById("browse-ai-tools").innerHTML = chipHtml(aiChips);
+  // 세부역량별로 툴을 묶는다. 한 툴이 여러 역량에 속하면 각 역량에 다 표시.
+  const capBuckets = {}; // cap -> Set(tool_name)
+  Object.keys(counts).forEach(tool => {
+    const caps = TOOL_CAP_MAP[tool];
+    if (caps && caps.length) {
+      caps.forEach(([cap]) => {
+        (capBuckets[cap] = capBuckets[cap] || new Set()).add(tool);
+      });
+    } else {
+      (capBuckets["기타"] = capBuckets["기타"] || new Set()).add(tool);
+    }
+  });
 
+  const orderedCaps = CAP_ORDER.filter(c => capBuckets[c]);
+  if (capBuckets["기타"]) orderedCaps.push("기타");
+
+  const chipBtn = (tool) => `<button class="tool-chip ${tool===activeBrowseTool?'active':''}" onclick="selectBrowseTool('${tool.replace(/'/g,"\\'")}')">${tool} <span class="tool-chip-count">${counts[tool]}</span></button>`;
+
+  const html = orderedCaps.length
+    ? orderedCaps.map(cap => {
+        const tools = [...capBuckets[cap]].sort((a,b)=>counts[b]-counts[a]);
+        const desc = CAP_DESC[cap] || "";
+        return `<div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:${desc?'4px':'8px'}">
+            <span style="font-size:13px;font-weight:700">${cap}</span>
+          </div>
+          ${desc?`<div style="font-size:11.5px;color:var(--text3);margin-bottom:10px;line-height:1.5">${desc}</div>`:''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap">${tools.map(chipBtn).join('')}</div>
+        </div>`;
+      }).join('')
+    : `<div style="font-size:12px;color:var(--text3)">등록된 툴이 없어요</div>`;
+
+  document.getElementById("browse-cap-groups").innerHTML = html;
   renderBrowseToolMembers(entries);
+  renderToolDict();
+}
+
+// 방식 C: 툴 사전 표 (현재 선택된 직무군에서 실제 쓰이는 툴만)
+function renderToolDict() {
+  const table = document.getElementById("tool-dict-table");
+  if (!table) return;
+  const entries = currentJobGroupEntries();
+  const usedTools = [...new Set(entries.map(e => e.tool_name))].sort();
+
+  const rows = usedTools.map(tool => {
+    const caps = TOOL_CAP_MAP[tool];
+    const typeLabel = entries.find(e=>e.tool_name===tool)?.tool_type === 'AI' ? 'AI 툴' : '디자인 툴';
+    const badges = caps && caps.length
+      ? caps.map(([cap,job])=>{
+          const isAi = cap.startsWith("AI");
+          return `<span style="display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:10px;margin:2px 3px 2px 0;background:${isAi?'var(--amber-light)':'var(--accent-light)'};color:${isAi?'var(--amber)':'var(--accent)'}">${cap} · ${job}</span>`;
+        }).join('')
+      : `<span style="font-size:11px;color:var(--text3)">미분류</span>`;
+    return `<tr>
+      <td style="padding:9px 14px;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap">${tool}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text3);white-space:nowrap">${typeLabel}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid var(--border)">${badges}</td>
+    </tr>`;
+  }).join('');
+
+  table.innerHTML = `<thead><tr>
+      <th style="background:var(--surface2);padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);border-bottom:2px solid var(--border);width:150px">업무툴</th>
+      <th style="background:var(--surface2);padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);border-bottom:2px solid var(--border);width:110px">유형</th>
+      <th style="background:var(--surface2);padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);border-bottom:2px solid var(--border)">연결된 세부역량 (직무)</th>
+    </tr></thead><tbody>${rows || `<tr><td colspan="3" style="padding:14px;text-align:center;color:var(--text3);font-size:12px">이 직무군에서 등록된 툴이 없어요</td></tr>`}</tbody>`;
 }
 
 function selectBrowseTool(name) {
@@ -1475,7 +1638,7 @@ function renderBrowseToolMembers(entries) {
     list.map(r => `
       <div class="skill-item" style="cursor:pointer" onclick="openMemberDetail('${r.email}')">
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600">${r.name||'—'} <span style="font-size:11px;font-weight:400;color:var(--text3)">${r.dept||'—'} · ${r.team||'—'} · ${r.job||'—'}</span></div>
+          <div style="font-size:13px;font-weight:600">${r.name||'—'}${roleTag(r)} <span style="font-size:11px;font-weight:400;color:var(--text3)">${r.dept||'—'} · ${r.team||'—'} · ${r.job||'—'}</span></div>
           <div style="font-size:11px;color:var(--text3)">${r.source==='leader'?'리더 평가':'본인 기재'}</div>
         </div>
         <span class="lv ${lvMap[r.level]||'lv1'}">${r.level||'미기재'}</span>
