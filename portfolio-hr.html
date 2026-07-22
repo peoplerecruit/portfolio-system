@@ -517,6 +517,16 @@ select.f-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg x
             </div>
           </div>
 
+          <div class="card">
+            <div class="card-body">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+                <span class="card-title">🏆 전사 제작 특화 AI TOP3</span>
+                <span style="font-size:11px;color:var(--text3)">이미지·영상·오디오 생성 AI 중 사용 인원이 가장 많은 툴 (범용 AI 제외)</span>
+              </div>
+              <div id="ai-top3" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+            </div>
+          </div>
+
           <div class="card" style="overflow:visible">
             <div class="card-body" style="padding-bottom:4px">
               <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
@@ -1302,6 +1312,60 @@ async function loadOrgCap() {
     return `<tr><td style="padding:4px 6px;font-weight:700;font-size:12px;white-space:nowrap;border-bottom:1px solid var(--border)">${dept}<span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px">${ds.total}명</span></td>${cells}</tr>`;
   }).join('');
   heatTable.innerHTML = thead + rows;
+
+  // ── 전사 제작 특화 AI TOP3 (사용 인원 순 + 평균 숙련도) ──
+  // 범용 AI(ChatGPT 등)는 제외하고, 이미지·영상·오디오 생성 AI만 대상으로 한다.
+  const PROD_AI = { image: AI_IMAGE_TOOLS, video: AI_VIDEO_TOOLS, audio: AI_AUDIO_TOOLS };
+  const PROD_AI_LABEL = {}; // 툴 -> 카테고리 라벨
+  AI_IMAGE_TOOLS.forEach(t=>PROD_AI_LABEL[t]="이미지 생성");
+  AI_VIDEO_TOOLS.forEach(t=>PROD_AI_LABEL[t]="영상·모션");
+  AI_AUDIO_TOOLS.forEach(t=>PROD_AI_LABEL[t]="오디오·음성");
+  const PROD_AI_SET = new Set(Object.keys(PROD_AI_LABEL));
+
+  const toolStat = {}; // tool -> { users:Set, levels:[] }
+  members.forEach(m=>{
+    const bestPerTool = {};
+    (m.allSkills||m.skills||[]).forEach(s=>{
+      if(!PROD_AI_SET.has(s.tool_name)) return;
+      const r = lrank(s.level);
+      if(r > (bestPerTool[s.tool_name]||0)) bestPerTool[s.tool_name] = r;
+    });
+    Object.entries(bestPerTool).forEach(([tool,r])=>{
+      if(r < 3) return; // 실무 활용 이상만
+      if(!toolStat[tool]) toolStat[tool] = { users:0, levelSum:0 };
+      toolStat[tool].users++;
+      toolStat[tool].levelSum += r;
+    });
+  });
+
+  const top3 = Object.entries(toolStat)
+    .map(([tool,st])=>({ tool, users:st.users, avg: st.levelSum/st.users }))
+    .sort((a,b)=> b.users - a.users || b.avg - a.avg)
+    .slice(0,3);
+
+  const rankMeta = [
+    { cls:'r1', color:'var(--gold, #d4a017)', bg:'linear-gradient(180deg,#fffbee,#fff)', border:'#d4a017' },
+    { cls:'r2', color:'#94a3b8', bg:'linear-gradient(180deg,#f8fafc,#fff)', border:'#94a3b8' },
+    { cls:'r3', color:'#b87333', bg:'linear-gradient(180deg,#fdf6f0,#fff)', border:'#b87333' },
+  ];
+
+  const top3El = document.getElementById("ai-top3");
+  if (top3El) {
+    top3El.innerHTML = top3.length
+      ? top3.map((t,i)=>{
+          const meta = rankMeta[i];
+          return `<div style="flex:1;min-width:150px;border:1px solid ${meta.border};border-radius:12px;padding:16px;position:relative;overflow:hidden;background:${meta.bg}">
+            <span style="position:absolute;top:14px;right:14px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--accent-light);color:var(--accent)">${PROD_AI_LABEL[t.tool]}</span>
+            <div style="font-size:22px;font-weight:800;color:${meta.color}">${i+1}</div>
+            <div style="font-size:16px;font-weight:700;margin:6px 0 10px">${t.tool}</div>
+            <div style="display:flex;align-items:baseline;gap:5px;font-size:12px;color:var(--text2);margin-bottom:6px"><span style="font-size:19px;font-weight:800;color:var(--accent)">${t.users}</span>명 사용</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:3px">평균 숙련도 <b>${t.avg.toFixed(1)}</b> / 5</div>
+            <div style="height:6px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:3px"><div style="height:100%;background:linear-gradient(90deg,#7c8cf7,#4f46e5);border-radius:4px;width:${(t.avg/5*100).toFixed(0)}%"></div></div>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:12px;color:var(--text3);padding:8px 0">실무 활용 이상으로 등록된 제작 특화 AI 툴이 아직 없어요</div>`;
+  }
+
   orgCapLoaded = true;
 }
 
