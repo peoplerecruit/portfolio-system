@@ -120,6 +120,10 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
 .tool-chip.active{background:var(--accent-grad);color:#fff;border-color:transparent;}
 .tool-chip.active .tool-chip-count{background:rgba(255,255,255,.25);color:#fff;}
 .tool-chip-count{font-size:10px;font-weight:600;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:10px;}
+.tool-chip.has-foreign{border-color:var(--amber);border-style:dashed;}
+.tool-chip.has-foreign:hover{border-color:var(--amber);color:var(--amber);}
+.foreign-tool-badge{font-size:9.5px;font-weight:700;color:#fff;background:var(--amber);padding:1px 6px;border-radius:8px;margin-left:2px;letter-spacing:-.02em;}
+.tool-chip.active .foreign-tool-badge{background:rgba(255,255,255,.3);}
 .heat-cell{display:flex;align-items:center;justify-content:center;height:32px;font-weight:700;font-size:11px;}
 .heat-empty-cell{color:var(--text3);background:var(--surface2) !important;font-size:11px;display:flex;align-items:center;justify-content:center;height:32px;}
 .orgcap-bar-bg{flex:1;height:14px;background:var(--surface2);border-radius:7px;overflow:hidden;}
@@ -1635,7 +1639,30 @@ function renderToolBrowse() {
   const orderedCaps = CAP_ORDER.filter(c => capBuckets[c]);
   if (capBuckets["기타"]) orderedCaps.push("기타");
 
-  const chipBtn = (tool) => `<button class="tool-chip ${tool===activeBrowseTool?'active':''}" onclick="selectBrowseTool('${tool.replace(/'/g,"\\'")}')">${tool} <span class="tool-chip-count">${counts[tool]}</span></button>`;
+  // ── 타직무 메인 툴 판정 ──
+  // 각 직무군이 "메인으로 쓰는" 디자인·제작 툴 목록. (AI 툴은 직무 공통이라 대상에서 제외)
+  const JOB_MAIN_TOOLS = {
+    content: new Set(["Photoshop","Illustrator","Figma","Canva","InDesign","Procreate","Animate","EVOTO"]),
+    motion:  new Set(["Cinema 4D","Blender","Maya","3ds Max","Substance Painter","After Effects","Redshift","Octane","Nuke","Unreal Engine"]),
+    pd:      new Set(["Premiere Pro","Final Cut Pro","DaVinci Resolve","After Effects","Media Encoder","CapCut","Capture One"]),
+  };
+  const JOB_LABEL = { content:"콘텐츠디자이너", motion:"모션", pd:"PD" };
+  // 이 툴이 "다른 직무" 메인 툴인지 확인 → 맞으면 그 직무 라벨 반환, 아니면 null
+  function foreignJobLabel(tool) {
+    const myMain = JOB_MAIN_TOOLS[activeJobGroup];
+    if (myMain && myMain.has(tool)) return null;          // 지금 보는 직무의 메인 툴이면 배지 없음
+    for (const [key, set] of Object.entries(JOB_MAIN_TOOLS)) {
+      if (key === activeJobGroup) continue;
+      if (set.has(tool)) return JOB_LABEL[key];            // 다른 직무 메인 툴
+    }
+    return null;                                           // 어느 직무 메인도 아니면(범용 AI 등) 배지 없음
+  }
+
+  const chipBtn = (tool) => {
+    const fj = foreignJobLabel(tool);
+    const badge = fj ? `<span class="foreign-tool-badge">${fj} 툴</span>` : '';
+    return `<button class="tool-chip ${tool===activeBrowseTool?'active':''}${fj?' has-foreign':''}" onclick="selectBrowseTool('${tool.replace(/'/g,"\\'")}')">${tool} <span class="tool-chip-count">${counts[tool]}</span>${badge}</button>`;
+  };
 
   const html = orderedCaps.length
     ? orderedCaps.map(cap => {
