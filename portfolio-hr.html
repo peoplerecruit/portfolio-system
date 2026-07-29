@@ -2319,13 +2319,19 @@ const GRADE_META = {
   NI: { label:"개선이 필요함",  desc:"기대 수준 도달을 위한 보완이 필요하며, 후속 코칭·지원 대상",  color:"#E0342B" },
 };
 
-// 코멘트 1~2줄 요약 (문장 2개까지, 최대 120자)
+// 코멘트 요약: 문장 단위로 자연스럽게 끊는다 (문장 중간에서 …로 잘리지 않게).
+// 최대 대략 200자 안쪽에서 완결된 문장으로 마무리.
 function summarizeComment(txt) {
   const s = String(txt||"").replace(/\s+/g," ").trim();
   if (!s) return "";
   const sentences = s.split(/(?<=[.。!?])\s/).filter(Boolean);
-  let out = sentences.slice(0,2).join(" ");
-  if (out.length > 120) out = out.slice(0,118).trim() + "…";
+  let out = "";
+  for (const sent of sentences) {
+    if (out && (out.length + sent.length) > 200) break; // 이미 담은 게 있고 넘치면 멈춤(완결 문장 유지)
+    out = out ? out + " " + sent : sent;
+    if (out.length >= 200) break; // 한 문장이 이미 충분히 길면 그 문장까지만
+  }
+  if (!out) out = sentences[0] || s; // 안전장치
   return out;
 }
 
