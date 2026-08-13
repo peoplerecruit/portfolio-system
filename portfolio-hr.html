@@ -731,6 +731,38 @@ async function apiPost(body) {
   }
 }
 
+// ── 공유 데이터 캐시 ────────────────────────────────
+// getAllData는 가장 무거운 호출이라, 탭을 옮길 때마다 다시 부르면 느리고 연결도 끊긴다.
+// 반기별로 한 번만 불러서 메모리에 저장하고, 이후 화면들은 저장된 걸 재사용한다.
+// 데이터를 수정(멤버 추가/수정/평가 등)하면 refreshSharedData()로 강제 갱신한다.
+let _sharedDataCache = {};   // period -> summary 응답
+let _sharedDataPromise = {}; // period -> 진행 중인 요청(중복 호출 방지)
+
+async function getSharedData(force) {
+  const period = activePeriod;
+  if (!force && _sharedDataCache[period]) return _sharedDataCache[period];
+  // 이미 같은 반기 요청이 날아가 있으면 그 요청을 같이 기다림 (동시 중복 호출 방지)
+  if (!force && _sharedDataPromise[period]) return _sharedDataPromise[period];
+
+  const p = apiGet({ action:"getAllData", email:currentUser.email, period }).then(data=>{
+    if (data.ok) _sharedDataCache[period] = data;
+    _sharedDataPromise[period] = null;
+    return data;
+  }).catch(e=>{
+    _sharedDataPromise[period] = null;
+    return { ok:false, error: e.message };
+  });
+  _sharedDataPromise[period] = p;
+  return p;
+}
+
+function refreshSharedData() {
+  _sharedDataCache = {};
+  _sharedDataPromise = {};
+  orgCapLoaded = false;
+  profileAllMembers = [];
+}
+
 // ── 초기화 ──────────────────────────────────────────
 window.onload = () => {
   sessionToken = localStorage.getItem("hr_token");
@@ -853,6 +885,8 @@ function renderPeriodTabs() {
 async function selectPeriod(p) {
   activePeriod = p;
   renderPeriodTabs();
+  orgCapLoaded = false;      // 반기가 바뀌면 조직역량·프로필도 새 반기 기준으로 다시 계산
+  profileAllMembers = [];
   const active = document.querySelector(".section.active");
   if (active?.id === "section-dashboard") await loadDashboard();
   else if (active?.id === "section-members") await loadMembers();
@@ -868,7 +902,7 @@ function addPeriod() {
 
 // ── 대시보드 ─────────────────────────────────────────
 async function loadDashboard() {
-  const data = await apiGet({ action:"getAllData", email:currentUser.email, period:activePeriod });
+  const data = await getSharedData();
   if (!data.ok) { showNotif("로드 실패: "+data.error); return; }
   summaryData = data.summary || [];
 
@@ -970,7 +1004,7 @@ async function loadDashboard() {
 
 // ── 사업부 목록 ─────────────────────────────────────────
 async function loadMembers() {
-  const data = await apiGet({ action:"getAllData", email:currentUser.email, period:activePeriod });
+  const data = await getSharedData();
   if (!data.ok) return;
   allMembers = data.summary || [];
   buildDeptTabs();
@@ -1060,7 +1094,7 @@ const ADV_TOOL_LEVELS = ['전문가 리드','고급 응용'];
 const LEVEL_RANK = {'전문가 리드':5,'고급 응용':4,'실무 활용':3,'기본 활용':2,'기초 경험':1};
 
 async function loadEvalResults() {
-  const data = await apiGet({ action:"getAllData", email:currentUser.email, period:activePeriod });
+  const data = await getSharedData();
   if (!data.ok) return;
   evalAllMembers = data.summary || [];
   buildEvalDeptTabs();
@@ -1236,7 +1270,7 @@ let orgCapLoaded = false;
 
 async function loadOrgCap() {
   if (orgCapLoaded) return;
-  const data = await apiGet({ action:"getAllData", email:currentUser.email, period:activePeriod });
+  const data = await getSharedData();
   if (!data.ok) return;
   const members = data.summary || [];
 
@@ -2276,6 +2310,7 @@ async function saveMember() {
   if (data.ok) {
     showNotif(editingEmail?"수정되었습니다":"팀원이 추가되었습니다");
     closeModal();
+    refreshSharedData();
     await loadMembers();
   } else {
     const errEl = document.getElementById("modal-err");
@@ -2286,7 +2321,7 @@ async function saveMember() {
 async function deactivateMember(email, name) {
   if (!confirm(`${name}을(를) 비활성화하시겠어요?\n로그인이 차단되며 데이터는 보존됩니다.`)) return;
   const data = await apiPost({ action:"deactivateMember", hr_email:currentUser.email, email });
-  if (data.ok) { showNotif(`${name} 비활성화되었습니다`); await loadMembers(); }
+  if (data.ok) { showNotif(`${name} 비활성화되었습니다`); refreshSharedData(); await loadMembers(); }
   else showNotif("실패: "+data.error);
 }
 
